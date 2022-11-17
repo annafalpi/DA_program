@@ -2,6 +2,8 @@
 
 **IMPORTANT**: heu de tenir baixada l'eina SOX al linux.
 
+**IMPORTANT**: revisar que els fixers siguin executables.
+
 El programa funciona en dos fases:
 - Primerament, s'ha de configurar els paràmetres de la DATA AUGMENTATION. Veureu que hi ha un script anomenat "*configuration.sh*" on s'indiquen quins paràmetres s'han de configurar per cada mètode. Per exemple:
 

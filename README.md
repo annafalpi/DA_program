@@ -1,9 +1,9 @@
 # DA_program
 
-IMPORTANT: heu de tenir baixada l'eina SOX al linux.
+`**IMPORTANT**`: heu de tenir baixada l'eina SOX al linux.
 
 El programa funciona en dos fases:
-- Primerament, s'ha de configurar els paràmetres de la DATA AUGMENTATION. Veureu que hi ha un script anomenat "configuration.sh" on s'indiquen quins paràmetres s'han de configurar per cada mètode. Per exemple:
+- Primerament, s'ha de configurar els paràmetres de la DATA AUGMENTATION. Veureu que hi ha un script anomenat "`*configuration.sh*`" on s'indiquen quins paràmetres s'han de configurar per cada mètode. Per exemple:
 
     ```plain
     : ' ************************************ NOISE ADDING  *********************************** 

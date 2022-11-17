@@ -1,9 +1,9 @@
 # DA_program
 
-`*IMPORTANT*`: heu de tenir baixada l'eina SOX al linux.
+**IMPORTANT**: heu de tenir baixada l'eina SOX al linux.
 
 El programa funciona en dos fases:
-- Primerament, s'ha de configurar els paràmetres de la DATA AUGMENTATION. Veureu que hi ha un script anomenat "`*configuration.sh*`" on s'indiquen quins paràmetres s'han de configurar per cada mètode. Per exemple:
+- Primerament, s'ha de configurar els paràmetres de la DATA AUGMENTATION. Veureu que hi ha un script anomenat "*configuration.sh*" on s'indiquen quins paràmetres s'han de configurar per cada mètode. Per exemple:
 
     ```plain
     : ' ************************************ NOISE ADDING  *********************************** 
@@ -21,9 +21,9 @@ En aquest cas es fa ús d'un soroll que es troba a la biblioteca de mostres del 
 
 Hi ha una configuració ja feta, així que podeu començar a provar execucions sense patir.
 
-- En segon lloc, s'ha d'executar el programa via terminal amb la comanda " ./DA_program_v1.sh" + dos arguments obligatoris:
-$1: Fitxer o carpeta on vulgueu aplicar DA. Si els fitxers no son .wav el programa els convertirà.
-$2: mètode de DA. 
+- En segon lloc, s'ha d'executar el programa via terminal amb la comanda " *./DA_program_v1.sh*" + dos arguments obligatoris:
+**$1**: Fitxer o carpeta on vulgueu aplicar DA. Si els fitxers no son .wav el programa els convertirà.
+**$2**: mètode de DA. 
 Si executeu el programa sense arguments us saltarà l'ajuda per veure quins arguments posar.
 
     ```plain

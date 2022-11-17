@@ -5,15 +5,16 @@ IMPORTANT: heu de tenir baixada l'eina SOX al linux.
 El programa funciona en dos fases:
 - Primerament, s'ha de configurar els paràmetres de la DATA AUGMENTATION. Veureu que hi ha un script anomenat "configuration.sh" on s'indiquen quins paràmetres s'han de configurar per cada mètode. Per exemple:
 
-: ' ************************************ NOISE ADDING  *********************************** 
-    NOISE_SAMPLE:
-        -[""]        --> white noise sample synthetized
-        -[file.wav] --> wav file included in the program_samples directory.
-    ratio:
-        - number    --> ratio between signal al noise. Ex. If ratio=3, Signal=3*Noise.
-'
-NOISE_SAMPLE="sound-bible/noise-sound-bible-0014.wav"
-ratio=3
+
+    : ' ************************************ NOISE ADDING  *********************************** 
+        NOISE_SAMPLE:
+            -[""]        --> white noise sample synthetized
+            -[file.wav] --> wav file included in the program_samples directory.
+        ratio:
+            - number    --> ratio between signal al noise. Ex. If ratio=3, Signal=3*Noise.
+    '
+    NOISE_SAMPLE="sound-bible/noise-sound-bible-0014.wav"
+    ratio=3
 
 En aquest cas es fa ús d'un soroll que es troba a la biblioteca de mostres del programa "program_samples".  Podeu variar la mostra de soroll indicant una de les que hi ha a la carpeta.
 
@@ -25,11 +26,11 @@ $2: mètode de DA.
 Si executeu el programa sense arguments us saltarà l'ajuda per veure quins arguments posar.
 
 
-DATA AUGMENTATION SOFTWARE FAIL : Not enough input arguments
+    DATA AUGMENTATION SOFTWARE FAIL : Not enough input arguments
 
-usage summary: [INPUT FILE] [METHOD] [optional]
+    usage summary: [INPUT FILE] [METHOD] [optional]
 
-OPTIONS:
+    OPTIONS:
 
     - [INPUT FILE]: --> file.wav or file.mp3 to apply [METHOD]
                     --> folder to apply [METHOD] for each file.wav or file.mp3

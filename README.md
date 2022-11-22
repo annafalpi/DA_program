@@ -2,6 +2,8 @@
 
 **IMPORTANT**: heu de tenir baixada l'eina SOX al linux.
 
+**IMPORTANT**: revisar que els fixers siguin executables.
+
 El programa funciona en dos fases:
 - Primerament, s'ha de configurar els paràmetres de la DATA AUGMENTATION. Veureu que hi ha un script anomenat "*configuration.sh*" on s'indiquen quins paràmetres s'han de configurar per cada mètode. Per exemple:
 
@@ -22,8 +24,8 @@ En aquest cas es fa ús d'un soroll que es troba a la biblioteca de mostres del 
 Hi ha una configuració ja feta, així que podeu començar a provar execucions sense patir.
 
 - En segon lloc, s'ha d'executar el programa via terminal amb la comanda " *./DA_program_v1.sh*" + dos arguments obligatoris:
-**$1**: Fitxer o carpeta on vulgueu aplicar DA. Si els fitxers no son .wav el programa els convertirà.
-**$2**: mètode de DA. 
+    - **$1**: Fitxer o carpeta on vulgueu aplicar DA. Si els fitxers no son .wav el programa els convertirà.
+    - **$2**: mètode de DA. 
 Si executeu el programa sense arguments us saltarà l'ajuda per veure quins arguments posar.
 
     ```plain
@@ -53,10 +55,10 @@ Si executeu el programa sense arguments us saltarà l'ajuda per veure quins argu
 
 Opcionalment, hi ha un tercer argument que permet escoltar o mostrar la forma d'ona o l'espectrograma del senyal generat. L'ona i l'espectrograma no funcionen encara en aquesta versió. Pot ser que, depèn de si utilitzeu linux pur o una màquina virtual, la comanda pley no funcioni i /o doni error. Podeu escoltar el resultat amb un reproductor convencional.
 
-Us he deixat algunes mostres a la carpeta "original_samples" per si voleu provar-ho. Jo acostumo a copiar-les a "input_files" perquè el programa reemplaça tots els fitxers .mp3 i .raw a .wav. i així no perdo les mostres "originals".
+Us he deixat algunes mostres a la carpeta "*original_samples*" per si voleu provar-ho. Recomano copiar-les a "*input_files*" perquè el programa reemplaça tots els fitxers *.mp3* i *.raw* a *.wav*. i així no es perden les mostres "originals".
 
 
-PROGRAM SAMPLES:
+**PROGRAM SAMPLES:**
 - RIR - Originalment estaven en format .mat, les he convertit via Matlab a txt.
 - Noise.
 

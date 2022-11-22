@@ -8,7 +8,7 @@
     pitch_factor
         - number    --> pitch shifting value
     shift_start
-        - nnumber   --> pitch shifting start value 
+        - number    --> pitch shifting start value 
         - [""]      --> pitch shifting start value at sample begining
     shift_end
         - number    --> pitch shifting end value 
@@ -16,8 +16,8 @@
 '
 shift_mode='fixed'
 pitch_factor=1.5
-shift_start=""
-shift_end=""
+shift_start=5
+shift_end=9
 
 : ' ************************************ TIME STRETCHING  *********************************** 
     stretch_mode:
@@ -44,7 +44,7 @@ stretch_end=""
     ratio:
         - number    --> ratio between signal al noise. Ex. If ratio=3, Signal=3*Noise.
 '
-NOISE_SAMPLE="sound-bible/noise-sound-bible-0014.wav"
+NOISE_SAMPLE=""
 ratio=3
 
 
@@ -52,7 +52,7 @@ ratio=3
     NOISE_SAMPLE:
         -[file.txt]  --> txt file included in the program_samples directory.
 '
-RIR_file="RIR_files/air_phone_kitchen_hhp_1.txt"
+RIR_file="RIR_files/air_binaural_meeting_1_0_4.txt"
 
 : ' ************************************ CHORUS EFFECT *********************************** 
     delay, decay, speeed, depth:

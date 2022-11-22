@@ -95,7 +95,7 @@ function trim_segments(){
 }
 
 function noise_adding(){
-    check_sample_rate
+
     echo "noise adding to  " $file 
     folder_name='NOISE_ADDING'
     create_folder $DIR $folder_name 
@@ -106,6 +106,7 @@ function noise_adding(){
         noise_generator $noise_duration                                                 # creació de soroll de la llargada de la mostra
         sox -m $DIR/temp/noise.wav $file $DIR/NOISE_ADDING/$(basename $file)            # mescla
     else 
+        check_sample_rate
         local tf=$(soxi -D $file)                                                       # llargada de la mostra original
         local tf_noise=$(soxi -D  $root/program_samples/$NOISE_SAMPLE)                   # llargada de la mostra de soroll
         #echo "FILE LENGHT: " $tf "; NOISE LENGHT: " $tf_noise

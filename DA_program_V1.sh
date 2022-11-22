@@ -68,7 +68,7 @@ elif [ -f $1 ]; then
     elif [ $2 = "noise" ]; then
         cd $root
         echo "********* NOISE ADDING CONFIGURATION: ******** "
-        sed -n '45,46p' ./configuration.sh
+        sed -n '47,48p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         noise_adding $file
@@ -141,7 +141,7 @@ elif  [ -d $1 ]; then
     elif [ $2 = "noise" ]; then
         cd $root
         echo "********* NOISE ADDING CONFIGURATION: ******** "
-        sed -n '45,46p' ./configuration.sh
+        sed -n '47,48p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         for file in *.wav; do

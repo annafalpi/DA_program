@@ -2,39 +2,43 @@
 
 
 : ' ************************************* PITCH SHIFTING  *********************************** 
-    shift_mode:
-        - [random]  --> applies random values of    [pitch_factor] , [shift_start] and [shift_end]
-        - [fixed]   --> applies values specified in [pitch_factor] , [shift_start] and [shift_end] 
     pitch_factor
-        - number    --> pitch shifting value
+        - number            --> determined value
+        - (number number)   --> random value betweeen a touple interval.
+        - [""]              --> random value. ------  DEFAULT RANGE BETWEEN [-0.5, 2]  ----------
     shift_start
-        - number    --> pitch shifting start value 
-        - [""]      --> pitch shifting start value at sample begining
+        - ini               --> start value at sample begining.
+        - number            --> determined start value. 
+        - (number number)   --> random start value betweeen a touple interval.
+        - [""]              --> random start value.
     shift_end
-        - number    --> pitch shifting end value 
-        - [""]      --> pitch shifting end value at sample ending
+        - end               --> end value at sample ending.
+        - number            --> determined end value. 
+        - (number number)   --> random end value betweeen a touple interval.
+        - [""]              --> random end value.
 '
-shift_mode='fixed'
-pitch_factor=1.5
-shift_start=5
-shift_end=9
+pitch_factor=""
+shift_start=""
+shift_end=""
 
 : ' ************************************ TIME STRETCHING  *********************************** 
-    stretch_mode:
-        - [random]  --> applies random values of    [pitch_factor] , [shift_start] and [shift_end]
-        - [fixed]   --> applies values specified in [pitch_factor] , [shift_start] and [shift_end] 
     speed_factor
-        - number    --> pitch shifting value
+        - number             --> determined factor value
+        - (number number)    --> random factor value betweeen a touple interval.
+        - [""]               --> random factor value. ------  DEFAULT RANGE BETWEEN [0.1, 5]  ----------
     stretch_start
-        - number    --> pitch shifting start value 
-        - [""]      --> pitch shifting start value at sample begining
+        - ini               --> start value at sample begining
+        - number            --> determined start value 
+        - (number number)   --> random start value betweeen a touple interval.
+        - [""]              --> random  start value
     stretch_end
-        - number    --> pitch shifting end value 
-        - [""]      --> pitch shifting end value at sample ending
+        - end               --> end value at sample ending
+        - number            --> determined end value 
+        - (number number)   --> random end value betweeen a touple interval.
+        - [""]              --> random end value.  
 '
-stretch_mode='fixed'
-speed_factor=0.7 
-stretch_start=""       
+speed_factor=""
+stretch_start=""
 stretch_end=""
 
 : ' ************************************ NOISE ADDING  *********************************** 
@@ -44,51 +48,24 @@ stretch_end=""
     ratio:
         - number    --> ratio between signal al noise. Ex. If ratio=3, Signal=3*Noise.
 '
-NOISE_SAMPLE=""
-ratio=3
+NOISE_SAMPLE="program_samples/sound-bible-44100/"
+ratio=6
 
+#"sound-bible/noise-sound-bible-0014.wav"
 
 : ' ************************************ RIR FILTER  *********************************** 
-    NOISE_SAMPLE:
+    RIR_file:
         -[file.txt]  --> txt file included in the program_samples directory.
 '
-RIR_file="RIR_files/air_binaural_meeting_1_0_4.txt"
+RIR_file="../OUT_program_samples/RIR_files/"   
+#air_binaural_meeting_1_0_4.txt
 
-: ' ************************************ CHORUS EFFECT *********************************** 
-    delay, decay, speeed, depth:
-        - [""]        --> random delay value
-        - [number]    --> fixed delay nymber
-    wave_type:
-        - [t]         --> modulation with triangular wave
-        - [s]         --> modulation with sinusoidal wave
-    '
-delay=3
-decay=""
-speed="" 
-depth=""
-wave_type='t'
+: ' ************************************ FREQUENCY MASKING*********************************** 
+    f_centre:
+        - number  --> filter centre frequency
+    width:
+        - number  --> filtre bandwidth
+'
+f_centre=1000
+width=500
 
-
-reverberance=""
-
-
-# ******* ROOM SIMULATION ********
-
-export s_x=2                # Source position [x y z] (m)
-export s_y=3.5
-export s_z=2    
-
-export L_x=5                # Room dimensions [x y z] (m)
-export L_y=4
-export L_z=6
-  
-export r1_x=5                # Receiver position(s) [x y z] (m)
-export r1_y=4
-export r1_z=6 
-
-export r2_x=2                # Receiver position(s) [x y z] (m)
-export r2_y=1.5
-export r2_z=2  
-
-export reverberation_time=0.3
- 

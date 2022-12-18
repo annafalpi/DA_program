@@ -1,0 +1,431 @@
+# FUNCIONS D'INFORMACIÓ D'ERRRORS
+
+function IN_FILE_error(){
+    cd $root
+    sed -n '2,4p' ./program/usage.sh
+    sed -n '14,15p' ./program/usage.sh
+    sed -n '16,20p' ./program/usage.sh
+}
+
+function DA_method_error(){
+    cd $root
+    sed -n '4,5p' ./program/usage.sh
+    sed -n '14,15p' ./program/usage.sh
+    sed -n '20,28p' ./program/usage.sh 
+}
+
+function IN_OPTION_error(){
+    cd $root
+    sed -n '6,8p' ./program/usage.sh
+    sed -n '14,15p' ./program/usage.sh
+    sed -n '29,32p' ./program/usage.sh
+}
+
+function check_configuration(){
+#This function is used to check the parameters specified in the configuration.sh file to fit the requireds by the programm. '
+    pitch_conf_error
+    time_conf_error
+    noise_conf_error 
+    RIR_conf_error
+    masking_conf_error
+}
+
+function pitch_conf_error(){
+
+    local re='^[0-9]+([.][0-9]+)?$'
+
+    #comprovació numerica del factor + continuitat de l'interval.
+    local len=${#pitch_factor[@]}
+    if [ "$pitch_factor" != "" ]; then
+        # Si no és un valor completament aleatori
+        if [ $len == 1 ]; then   
+            # si és un sol valor, vigilar que sigui un nombre               
+            if ! [[ $pitch_factor =~ $re ]] ; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " $pitch_factor " is not a number"
+                exit
+            fi
+        elif [ $len == 2 ]; then
+            # si son dos valors, vigilar que els dos siguin nombres i q x1<x2
+            if ! [[ ${pitch_factor[0]} =~ $re ]] ; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${pitch_factor[0]} " is not a number"
+                exit
+            fi
+            if ! [[ ${pitch_factor[1]} =~ $re ]] ; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${pitch_factor[1]} " is not a number"
+                exit
+            fi
+            if [ $(echo "${pitch_factor[0]} > ${pitch_factor[1]}" |bc -l) == 1 ]; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${pitch_factor[0]} " should be lower than" ${pitch_factor[1]} 
+                exit
+            fi
+        else
+            echo "PITCH SHIFTING CONFIGURATION ERROR --> stretch_start is 1D or 2D array " 
+            exit
+        fi
+    fi
+    
+    if [[ $pitch_factor == 0 ]]; then
+        echo "WARNING --> This pitch factor will not afect the file " 
+        echo "Do you want to continue"
+        read permision
+        if [ $permision = "n" ]; then
+            exit
+        fi
+    fi
+
+    #comprovació numerica del start + continuitat de l'interval.
+    local len=${#shift_start[@]}
+    if [[ $shift_start != "" ]] && [[ $shift_start != "ini" ]]; then
+        # Si no és un valor completament aleatòri o el valor dinici
+        if [ $len == 1 ]; then   
+            # si és un sol valor, vigilar que sigui un nombre               
+            if ! [[ $shift_start =~ $re ]] ; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " $shift_start " is not a number"
+                exit
+            fi
+        elif [ $len == 2 ]; then
+            # si son dos valors, vigilar que els dos siguin nombres i q x1<x2
+            if ! [[ ${shift_start[0]} =~ $re ]]; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${shift_start[0]} " is not a number"
+                exit
+            fi
+            if ! [[ ${shift_start[1]} =~ $re ]]; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${shift_start[1]} " is not a number"
+                exit
+            fi
+            if [ $(echo "${shift_start[0]} > ${shift_start[1]}" |bc -l) == 1 ]; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${shift_start[0]} " should be lower than" ${shift_start[1]} 
+                exit
+            fi
+        else
+            echo "PITCH SHIFTING CONFIGURATION ERROR --> stretch_start is 1D or 2D array " 
+            exit
+        fi
+    fi
+    
+    #comprovació numerica del end + continuitat de l'interval.
+    local len=${#shift_end[@]}
+    if [[ $shift_end != "" ]] && [[ $shift_end != "end" ]]; then
+        # Si no és un valor completament aleatòri o el valor dinici
+        if [ $len == 1 ]; then   
+            # si és un sol valor, vigilar que sigui un nombre               
+            if ! [[ $shift_end =~ $re ]] ; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " $shift_end " is not a number"
+                exit
+            fi
+        elif [ $len == 2 ]; then
+            # si son dos valors, vigilar que els dos siguin nombres i q x1<x2
+            if ! [[ ${shift_end[0]} =~ $re ]] ; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${shift_end[0]} " is not a number"
+                exit
+            fi
+            if ! [[ ${shift_end[1]} =~ $re ]] ; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${shift_end[1]} " is not a number"
+                exit
+            fi
+            if [ $(echo "${shift_end[0]} > ${shift_end[1]}" |bc -l) == 1 ]; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR --> " ${shift_end[0]} " should be lower than" ${shift_end[1]} 
+                exit
+            fi
+        else
+            echo "PITCH SHIFTING CONFIGURATION ERROR --> stretch_start is 1D or 2D array " 
+            exit
+        fi
+    fi
+    
+    #condició de continuitat dels intervals
+    if [[ $shift_end != "" ]] && [[ $shift_end != "end" ]] && [[ $shift_start != "" ]] && [[ $shift_start != "ini" ]]; then
+        local len_start=${#shift_start[@]}
+        local len_end=${#shift_end[@]}
+        
+        if [[ $len_start == 1 ]] && [[ $len_end == 1 ]]; then
+            if [ $(echo "$shift_start > $shift_end" |bc -l) == 1 ]; then
+                echo "PITCH SHIFTINGCONFIGURATION ERROR 1 --> shift_start (" $shift_start ") should be lower than shift_end(" $shift_end ")."
+                exit
+            fi
+        elif [[ $len_start == 1 ]] && [[ $len_end == 2 ]]; then
+            if [ $(echo "$shift_start > ${shift_end[0]}" |bc -l) == 1 ]; then
+                echo "HERE"
+                echo "PITCH SHIFTING CONFIGURATION ERROR 2 --> shift_end[0](" ${shift_end[0]} ") should be lower than shift_start(" $shift_start ")."
+                exit
+            fi
+        elif [[ $len_start == 2 ]] && [[ $len_end == 1 ]]; then
+            if [ $(echo "${shift_start[1]} > $shift_end" |bc -l) == 1 ]; then
+                echo "PITCH SHIFTING CONFIGURATION ERROR 3 --> shift_start[1](" ${shift_start[1]} ") should be lower than shift_end(" $shift_end ")."
+                exit
+            fi
+        elif [[ $len_start == 2 ]] && [[ $len_end == 2 ]]; then
+            if [ $(echo "${shift_start[1]} > ${shift_end[0]}" |bc -l) == 1 ]; then
+                echo "PITCH SHIFTING  CONFIGURATION ERROR 4 --> shift_start[1](" ${shift_start[1]} ") should be lower than shift_end[0](" ${shift_end[0]} ")." 
+                exit
+            fi
+        fi
+
+    fi
+}
+
+
+function time_conf_error(){
+    local re='^[0-9]+([.][0-9]+)?$'
+
+    #comprovació numerica del factor + continuitat de l'interval.
+    local len=${#speed_factor[@]}
+    if [[ "$speed_factor" != "" ]]; then
+        # Si no és un valor completament aleatori
+        if [ $len == 1 ]; then   
+            # si és un sol valor, vigilar que sigui un nombre               
+            if ! [[ $speed_factor =~ $re ]] ; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " $speed_factor " is not a number"
+                exit
+            fi
+        elif [ $len == 2 ]; then
+            # si son dos valors, vigilar que els dos siguin nombres i q x1<x2
+            if ! [[ ${speed_factor[0]} =~ $re ]] ; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${speed_factor[0]} " is not a number"
+                exit
+            fi
+            if ! [[ ${speed_factor[1]} =~ $re ]] ; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${speed_factor[1]} " is not a number"
+                exit
+            fi
+            if [ $(echo "${speed_factor[0]} > ${speed_factor[1]}" |bc -l) == 1 ]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${speed_factor[0]} " should be lower than" ${speed_factor[1]} 
+                exit
+            fi
+        else
+            echo "TIME STRETCHING CONFIGURATION ERROR --> stretch_start is 1D or 2D array " 
+            exit
+        fi
+
+        if [ $speed_factor == 0 ]; then
+            echo "WARNING --> This speed factor will not afect the file " 
+            echo "Do you want to continue"
+            read permision
+            if [ $permision = "n" ]; then
+                exit
+            fi
+        fi
+    fi
+
+    #comprovació numerica del start + continuitat de l'interval.
+    local len=${#stretch_start[@]}
+    if [[ $stretch_start != "" ]] && [[ $stretch_start != "ini" ]]; then
+        # Si no és un valor completament aleatòri o el valor dinici
+        if [ $len == 1 ]; then   
+            # si és un sol valor, vigilar que sigui un nombre               
+            if ! [[ $stretch_start =~ $re ]] ; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " $stretch_start " is not a number"
+                exit
+            fi
+        elif [ $len == 2 ]; then
+            # si son dos valors, vigilar que els dos siguin nombres i q x1<x2
+            if ! [[ ${stretch_start[0]} =~ $re ]]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${stretch_start[0]} " is not a number"
+                exit
+            fi
+            if ! [[ ${stretch_start[1]} =~ $re ]]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${stretch_start[1]} " is not a number"
+                exit
+            fi
+            if [ $(echo "${stretch_start[0]} > ${stretch_start[1]}" |bc -l) == 1 ]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${stretch_start[0]} " should be lower than" ${stretch_start[1]} 
+                exit
+            fi
+        else
+            echo "TIME STRETCHING CONFIGURATION ERROR --> stretch_start is 1D or 2D array " 
+            exit
+        fi
+    fi
+
+    #comprovació numerica del end + continuitat de l'interval.  
+    local len=${#stretch_end[@]}
+    if [[ $stretch_end != "" ]] && [[ $stretch_end != "end" ]]; then
+        # Si no és un valor completament aleatòri o el valor dinici
+        if [ $len == 1 ]; then   
+            # si és un sol valor, vigilar que sigui un nombre               
+            if ! [[ $stretch_end =~ $re ]] ; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " $stretch_end " is not a number"
+                exit
+            fi
+        elif [ $len == 2 ]; then
+            # si son dos valors, vigilar que els dos siguin nombres i q x1<x2
+            if ! [[ ${stretch_end[0]} =~ $re ]] ; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${stretch_end[0]} " is not a number"
+                exit
+            fi
+            if ! [[ ${stretch_end[1]} =~ $re ]] ; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${stretch_end[1]} " is not a number"
+                exit
+            fi
+            if [ $(echo "${stretch_end[0]} > ${stretch_end[1]}" |bc -l) == 1 ]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR --> " ${stretch_end[0]} " should be lower than" ${stretch_end[1]} 
+                exit
+            fi
+        else
+            echo "TIME STRETCHING CONFIGURATION ERROR --> stretch_start is 1D or 2D array " 
+            exit
+        fi
+    fi
+    
+    #condició de continuitat dels intervals
+    if [[ $stretch_end != "" ]] && [[ $stretch_end != "end" ]] && [[ $stretch_start != "" ]] && [[ $stretch_start != "ini" ]]; then
+        local len_start=${#stretch_start[@]}
+        local len_end=${#stretch_end[@]}
+
+        if [[ $len_start == 1 ]] && [[ $len_end == 1 ]]; then
+            if [ $(echo "$stretch_start > $stretch_end" |bc -l) == 1 ]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR 1 --> stretch_start (" $stretch_start ") should be lower than stretch_end(" $stretch_end ")."
+                exit
+            fi
+        elif [[ $len_start == 1 ]] && [[ $len_end == 2 ]]; then
+            if [ $(echo "$stretch_start > ${stretch_end[0]}" |bc -l) == 1 ]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR 2 --> stretch_end[0](" ${stretch_end[0]} ") should be lower than stretch_start(" $stretch_start ")."
+                exit
+            fi
+        elif [[ $len_start == 2 ]] && [[ $len_end == 1 ]]; then
+            if [ $(echo "${stretch_start[1]} > $stretch_end" |bc -l) == 1 ]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR 3 --> stretch_start[1](" ${stretch_start[1]} ") should be lower than stretch_end(" $stretch_end ")."
+                exit
+            fi
+        elif [[ $len_start == 2 ]] && [[ $len_end == 2 ]]; then
+            if [ $(echo "${stretch_start[1]} > ${stretch_end[0]}" |bc -l) == 1 ]; then
+                echo "TIME STRETCHING CONFIGURATION ERROR 4 --> stretch_start[1](" ${stretch_start[1]} ") should be lower than stretch_end[0](" ${stretch_end[0]} ")." 
+                exit
+            fi
+        fi
+
+    fi
+}
+
+
+function check_time_limits(){
+    # Donat un inci o una tupla fora de límit de làudio
+
+    if [ "$ID" == "pitch" ]; then
+        #echo "in pitch"
+        start=(${shift_start[*]})             #còpia de tots els elements de larray
+        end=(${shift_end[*]})
+        ID="PITCH SHIFTING"
+    elif [ "$ID" == "time" ]; then
+        start=(${stretch_start[*]})
+        end=(${stretch_end[*]})
+        ID="TIME STRETCHING"
+    fi
+
+    #echo "START" $start
+    #echo "START_0" ${start[0]}
+    #echo "START_1" ${start[1]}
+
+    local tf=$(soxi -D  $file)
+    #echo "AUDIO DURATION" $tf
+
+    local len=${#start[@]}
+    if [[ $start != "" ]] && [[ $start != "ini" ]]; then
+        if [ $len == 1 ]; then 
+            if [ $(echo "$start > $tf" |bc -l) == 1 ]; then
+                echo $ID "CONFIGURATION TIME LIMIT ERROR --> start (" $start ") is greater than audio duration (" $tf ")." 
+                exit
+            fi
+        elif [ $len == 2 ]; then 
+            if [ $(echo "${start[0]} > $tf" |bc -l) == 1 ]; then
+                echo $ID "CONFIGURATION TIME LIMIT ERROR --> start[0] (" ${start[0]} ") is greater than audio duration (" $tf ")." 
+                exit
+            fi
+            if [ $(echo "${start[1]} > $tf" |bc -l) == 1 ]; then
+                echo $ID "CONFIGURATION TIME LIMIT ERROR --> start[1](" ${start[1]} ") is greater than audio duration (" $tf ")." 
+                exit
+            fi
+        fi
+    fi
+    
+    local len=${#end[@]}
+    if [[ $end != "" ]] && [[ $end != "end" ]]; then
+        if [ $len == 1 ]; then 
+            echo "HERE" $end $tf
+            if [ $(echo "$end > $tf" |bc -l) == 1 ]; then
+                echo $ID "CONFIGURATION  TIME LIMIT ERROR end --> " $end " is greater than audio duration"
+                exit
+            fi
+        elif [ $len == 2 ]; then 
+            if [ $(echo "${end[0]} > $tf" |bc -l) == 1 ]; then
+                echo $ID "CONFIGURATION TIME LIMIT ERROR end[0] --> " ${end[0]} " is greater than audio duration." 
+                exit
+            fi
+            if [ $(echo "${end[1]} > $tf" |bc -l) == 1 ]; then
+                echo $ID "CONFIGURATION TIME LIMIT ERROR end[1] --> " ${end[1]} " is greater than audio duration." 
+                exit
+            fi
+        fi
+    fi  
+      
+}
+
+
+function noise_conf_error(){
+    if [[ $NOISE_SAMPLE != "" ]]; then
+        IFS='/' read -ra path <<< "$NOISE_SAMPLE"
+        local sample_name=${path[-1]}
+        local sample_dir=""
+        unset path[-1]
+        for i in "${path[@]}"; do
+            sample_dir=$sample_dir/$i
+        done 
+
+        #echo "SAMPLE DIR" $sample_dir "filename " $sample_name
+        
+        if ! [ -d $root/$sample_dir ]; then
+            echo "NOISE ADDING CONFIGURATION ERROR --> $sample_dir is not a directory."  
+            exit 
+        fi
+
+        if ! [ -d $root/$sample_dir/$sample_name ]; then      #Si lúltim element no és una carpeta, pot optar a ser fitxer
+            if ! [ -f $root/$sample_dir/$sample_name ]; then
+                echo "NOISE ADDING CONFIGURATION ERROR --> $sample_name is not a file in $sample_dir"  
+                exit  
+            fi
+        fi
+
+    fi
+}
+
+
+function RIR_conf_error(){
+        echo $RIR_file  
+        IFS='/' read -ra path <<< "$RIR_file"
+        local sample_name=${path[-1]}
+        local sample_dir=""
+        unset path[-1]
+        for i in "${path[@]}"; do
+            sample_dir=$sample_dir/$i
+        done 
+        
+        #echo "SAMPLE DIR" $sample_dir ". Filename " $sample_name
+
+        if ! [ -d $root/$sample_dir ]; then
+            echo "RIR FILTER CONFIGURATION ERROR --> $sample_dir is not a directory."  
+            exit 
+        fi
+
+        if ! [ -d $root/$sample_dir/$sample_name ]; then      #Si lúltim element no és una carpeta, pot optar a ser fitxer
+            if ! [ -f $root/$sample_dir/$sample_name ]; then
+                echo "RIR FILTER CONFIGURATION ERROR --> $sample_name is not a file in $sample_dir"  
+                exit  
+            fi
+        fi
+}
+
+function masking_conf_error(){
+    local re='^[0-9]+([.][0-9]+)?$'
+    if ! [[ $f_centre =~ $re ]] ; then
+        echo "FREQUENCY MASKING CONFIGURATION ERROR --> f_centre is not a number"
+        exit
+    elif ! [[ $width =~ $re ]] ; then
+        echo "FREQUENCY MASKING CONFIGURATION ERROR --> width is not a number"
+        exit
+    elif [ $(echo "$width > $f_centre" |bc -l) == 1 ]; then
+        echo "FREQUENCY MASKING CONFIGURATION ERROR --> width is GREATER than f_centre"
+        exit
+    fi
+
+}
+

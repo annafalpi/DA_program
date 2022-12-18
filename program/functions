@@ -27,107 +27,257 @@ function EXTENSION_2_WAV(){
     
 }
 
-function create_folder(){
-#Crea una carpeta si aquesta no existeix
-    if [ ! -d $DIR/$folder_name ] 
-    then
+function pitch_shifting(){
+    if [ "$out_dir" == "" ]; then               #OUTPUT DIR NOT SPECIFIED
         cd $DIR
-        mkdir $folder_name
+        folder_name='PITCH_SHIFT'
+        create_folder $DIR $folder_name
+    fi 
+    
+    cd $root/$workingDIR 
+
+    local tf=$(soxi -D  $file)
+
+    pitch_factor_aux=$pitch_factor
+    shift_start_aux=$shift_start
+    shift_end_aux=$shift_end
+
+    local len=${#pitch_factor[@]}
+    if [ -z $pitch_factor ]; then
+        pitch_factor=$(seq 0.5 0.01 2 | shuf | head -n1)           # Valor random generant en cent
+    elif ! [ $len == 1 ]; then
+        pitch_factor=$(seq ${pitch_factor[0]} 0.01  ${pitch_factor[1]} | shuf | head -n1)
+    fi
+
+    aux=`echo "l($pitch_factor)/l(2)" | bc -l`
+    cents_pitch_factor=`echo "1200*$aux" | bc` 
+    
+    
+
+    local len=${#shift_start[@]}
+    if [ -z $shift_start ]; then
+        shift_start=$(seq 0 .01 $tf | shuf | head -n1)
+    
+    elif [ $shift_start == "ini" ]; then
+        shift_start=0
+    elif ! [ $len == 1 ]; then
+        shift_start=$(seq ${shift_start[0]} .01  ${shift_start[1]} | shuf | head -n1) 
+    fi
+
+    local len=${#shift_end[@]}
+    if [ -z $shift_end ]; then
+        shift_end=$(seq $shift_start .01 $tf | shuf | head -n1)
+    elif [ $len == 2 ]; then
+        shift_end=$(seq ${shift_end[0]} .01  ${shift_end[1]} | shuf | head -n1) 
+    elif [ $shift_end == "end" ]; then
+        shift_end=$tf
+    fi
+
+    #echo "PITCH FACTOR IS: " $pitch_factor
+    #echo "START IS: "  $shift_start
+    #echo "END IS: "  $shift_end
+
+    if [ $pitch_factor == 0 ]; then
+        sox -v 0.99 $file $DIR/$folder_name/$(basename $file) 
+    else
+        if ! [[ $shift_start == 0 ]] && ! [[ $shift_end == $tf  ]]; then
+            #echo "SOX BEND"
+                local aux_end=`echo "$shift_end-$shift_start" | bc`
+                sox -v 0.5 $file $DIR/$folder_name/$(basename $file) bend $shift_start,$cents_pitch_factor,$aux_end      #inci, cents, longitud del canvi (NO final del canvi)          
+        else
+            #echo "SOX PITCH"
+            sox -v 0.99 $file $DIR/$folder_name/$(basename $file) pitch $cents_pitch_factor
+        fi
     fi  
+
+    echo "pitch shiting to " $file  "; --> pitch_factor: " $pitch_factor" shift_start: " $shift_start "shift_end: " $shift_end
+    
+    pitch_factor=$pitch_factor_aux
+    shift_start=$shift_start_aux
+    shift_end=$shift_end_aux
+    
 }
 
-function pitch_shifting(){
-    echo "pitch shiting to  " $file 
-    folder_name='PITCH_SHIFT'
-    create_folder $DIR $folder_name
-    cd $root/$workingDIR 
-    if [ $shift_mode = "fixed" ] && [ -z $shift_start ] && [ -z $shift_end ]; then
-        sox -v 0.99 $file $DIR/PITCH_SHIFT/$(basename $file) pitch $cents        
-    elif [ $shift_mode = "fixed" ] && [ $shift_start ] && [ $shift_end ]; then
-        #FALTARIA COMPROVAR QUE ELS LÍMITS ESTIGUIN DINS DE l'ÀUDIO
-        end=$t_start+$t_end
-        sox $file $DIR/PITCH_SHIFT/$(basename $file) bend $shift_start,$cents,$shift_end
-        echo $cents $shift_start $shift_end
-    elif [ $shift_mode = 'random' ] ; then                        #si "RANDOM" llavors factor t i T son aleatòri
-        echo "RANDOM"
-        tf=$(soxi -D $file)
-        tf=${tf%.*}                                         #Duració completa de l'àudio
-        start=$((0 + $RANDOM%$tf))                          #Inici BEND
-        end=$(($start +1+ $RANDOM%$(($tf-$start))))         #Final BEND
-        number=$(($RANDOM%800-800))                         #número aleatòri entre [-800,800] cents
-        echo $number $start $end $tf
-        sox -v 0.99 $file $DIR/PITCH_SHIFT/$(basename $file) bend $start,$number,$end
-    fi
-}
+
 
 function time_scretching(){
-    echo "time stretching to  " $file 
-    folder_name='TIME_STRETCHING'
-    create_folder $DIR $folder_name
+
+    if [ "$out_dir" == "" ]; then               #OUTPUT DIR NOT SPECIFIED
+        cd $DIR
+        folder_name='TIME_STRETCHING'
+        create_folder $DIR $folder_name
+    fi 
+
     cd $root/$workingDIR 
-    if [ $stretch_mode = "fixed" ] && [ -z $stretch_start ] && [ -z $stretch_end ]; then
-        sox $file $DIR/TIME_STRETCHING/$(basename $file) tempo $speed_factor
-    elif [ $stretch_mode = "fixed" ] && [ $stretch_start ] && [ $stretch_end ]; then
-        trim_segments
-        sox $DIR/temp/segment2.wav $DIR/temp/segment2_speed.wav tempo $speed_factor           #TIME STRETCHING del segment
-        sox $DIR/temp/segment1.wav $DIR/temp/segment2_speed.wav $DIR/temp/segment3.wav $DIR/TIME_STRETCHING/$(basename $file)       #Combinar segments
-    elif [ $stretch_mode = 'random' ] ; then 
-        tf=$(soxi -D $file)
-        tf=${tf%.*}                                         #Duració completa de l'àudio
-               
-        start=$((0 + $RANDOM%$tf))                          #Inici tall
-        end=$(($start +1+ $RANDOM%$(($tf-$start))))         #Final tall
-        number=$(seq 0.4 .01 2 | shuf | head -n1)           #número aleatòri entre [0.4, 2] 
-        echo $number $start $end $tf
-        trim_segments
-        sox $DIR/temp/segment2.wav $DIR/temp/segment2_speed.wav tempo $number          #TIME STRETCHING del segment
-        sox $DIR/temp/segment1.wav $DIR/temp/segment2_speed.wav $DIR/temp/segment3.wav $DIR/TIME_STRETCHING/$(basename $file)       #Combinar segments
+    
+    local tf=$(soxi -D  $file)
+
+    speed_factor_aux=$speed_factor
+    stretch_start_aux=$stretch_start
+    stretch_end_aux=$stretch_end
+
+    local len=${#speed_factor[@]}
+    if [ -z $speed_factor ]; then
+        speed_factor=$(seq 0.1 .01 5 | shuf | head -n1)           #número aleatòri entre [0.1, 5] 
+    elif ! [ $len == 1 ]; then
+        speed_factor=$(seq ${speed_factor[0]} .01  ${speed_factor[1]} | shuf | head -n1) 
+
+    fi
+
+    local len=${#stretch_start[@]}
+    if [ -z $stretch_start ]; then
+        stretch_start=$(seq 0 .01 $tf | shuf | head -n1)
+    elif [ $stretch_start == "ini" ]; then
+        stretch_start=0
+    elif ! [ $len == 1 ]; then
+        stretch_start=$(seq ${stretch_start[0]} .01  ${stretch_start[1]} | shuf | head -n1) 
+    fi
+
+    local len=${#stretch_end[@]}
+    if [ -z $stretch_end ]; then
+        stretch_end=$(seq $stretch_start .01 $tf | shuf | head -n1)
+    elif [ $len == 2 ]; then
+        stretch_end=$(seq ${stretch_end[0]} .01  ${stretch_end[1]} | shuf | head -n1) 
+    elif [ $stretch_end == "end" ]; then
+        stretch_end=$tf
+    fi
+    : '
+    echo "SPEED IS: " $speed_factor
+    echo "START IS: "  $stretch_start
+    echo "END IS: "  $stretch_end
+    '
+    if [ $speed_factor == 0 ]; then   
+        sox $file $DIR/$folder_name/$(basename $file) 
+    else
+        if [[ $stretch_start == 0 ]] && [[ $stretch_end == $tf  ]]; then
+            #echo "ALL FILE SPEED CHANGE"
+            sox $file $DIR/$folder_name/$(basename $file) tempo $speed_factor
+        else 
+            trim_segments $tf
+            sox $root/temp/segment2.wav $root/temp/segment2_speed.wav tempo $speed_factor           #TIME STRETCHING del segment
+            sox $root/temp/segment1.wav $root/temp/segment2_speed.wav $root/temp/segment3.wav $DIR/$folder_name/$(basename $file)       #Combinar segments
+        fi
     fi  
+    
+    echo "time stretching to " $file "; --> speed_factor: " $speed_factor " stretch_start: " $stretch_start "stretch_end: " $stretch_end
+
+    speed_factor=$speed_factor_aux
+    stretch_start=$stretch_start_aux
+    stretch_end=$stretch_end_aux
 }
 
+
 function trim_segments(){
-    tf=$(soxi -D $file)                                                         #Definir final de l'àudio
-    sox $file $DIR/temp/segment1.wav trim 0 $stretch_start                               #Retallar el primer segment
-    local duration_2=$stretch_end-$stretch_start                                                #Establir durada del segon segment
-    sox $file $DIR/temp/segment2.wav trim $stretch_start $duration_2                     #Retallar segon segment
-    local duration_3=$tf-$stretch_end                                                  #Establir durada del tercer segment
-    sox $file $DIR/temp/segment3.wav trim $end $stretch_end                     #Retallar tercer segment
+    sox $file $root/temp/segment1.wav trim 0 $stretch_start                              #Retallar el primer segment
+    local duration_2=$stretch_end-$stretch_start                                        #Establir durada del segon segment
+    sox $file $root/temp/segment2.wav trim $stretch_start $duration_2                    #Retallar segon segment
+    local duration_3=$tf-$stretch_end                                                   #Establir durada del tercer segment
+    sox $file $root/temp/segment3.wav trim $end $stretch_end                             #Retallar tercer segment
 }
+
+
+
 
 function noise_adding(){
 
-    echo "noise adding to  " $file 
-    folder_name='NOISE_ADDING'
-    create_folder $DIR $folder_name 
-    cd $root/$workingDIR
+    if [ "$out_dir" == "" ]; then               #OUTPUT DIR NOT SPECIFIED
+        cd $DIR
+        folder_name='NOISE_ADDING'
+        create_folder $DIR $folder_name 
+    fi 
 
-    if [ -z $NOISE_SAMPLE ]; then
-        local noise_duration=$(soxi -D $file)  
-        noise_generator $noise_duration                                                 # creació de soroll de la llargada de la mostra
-        sox -m $DIR/temp/noise.wav $file $DIR/NOISE_ADDING/$(basename $file)            # mescla
+    cd $root/$workingDIR
+    : '
+    #Es converteix el ratio de dB a valor escalar.
+    local aux=`echo " scale=4; $ratio/20 " | bc`
+    ratio=`echo " e(l(10)*$aux) " | bc -l `
+    echo "RATIO in linear: " $ratio
+    '
+
+    NOISE_SAMPLE_AUX=$NOISE_SAMPLE
+
+    local file_duration=$(soxi -D $file)                                           # Durada del senyal original
+    local file_sr=$(soxi -r $file)                                                 # SR del senyal original
+    local file_channels=$(soxi -c $file)                                           # Canals del senyal original
+    local file_bits=$(soxi -b $file)                                               # Bits del senyal original
+
+    #echo  $file_sr $file_channels $file_bits
+
+    if [ -z $NOISE_SAMPLE ]; then                                        
+        
+        noise_generator $file_duration $file_sr $file_channels $file_bits              # Sintesi del soroll
+        #change_noise_volume
+
+        sox -m -v 0.1 $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)           # mescla
+        #sox -m -v $volume $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)
+
     else 
-        check_sample_rate
-        local tf=$(soxi -D $file)                                                       # llargada de la mostra original
-        local tf_noise=$(soxi -D  $root/program_samples/$NOISE_SAMPLE)                   # llargada de la mostra de soroll
-        #echo "FILE LENGHT: " $tf "; NOISE LENGHT: " $tf_noise
-        change_noise_volume
-        if [ $(echo "$tf_noise > $tf" |bc -l) == 1 ]; then                              # si el temps noise és superior a la mostra, no cal allargar-lo
-            sox $root/program_samples/$NOISE_SAMPLE $DIR/temp/noise.wav trim 0 $tf       # retallar soroll a llargada de l'original
-            sox -m -v $volume $DIR/temp/noise.wav $file $DIR/NOISE_ADDING/$(basename $file)        # mescla soroll retallat i original
-        else
-            local aux=`echo "$tf/$tf_noise" | bc`                                       # Part entera
-            cp $root/program_samples/$NOISE_SAMPLE $DIR/temp/noise_aux.wav              # Copia a la carpeta temporal per tenir audio incial a replicar
-            for (( c=1; c<=$aux; c++ )); do  
-                sox $root/program_samples/$NOISE_SAMPLE $DIR/temp/noise_aux.wav $DIR/temp/noise_aux.wav          # replicar tants cops com parts enteres
-            done
-            sox $DIR/temp/noise_aux.wav $DIR/temp/noise.wav trim 0 $tf                  # Retall del soroll replicat
-            sox -m -v $volume $DIR/temp/noise.wav $file $DIR/NOISE_ADDING/$(basename $file)         # mescla
+        #echo "REAL NOISE"
+        
+        cd $root/$workingDIR
+        if [ -f $root/$NOISE_SAMPLE ]; then
+            NOISE_SAMPLE=$NOISE_SAMPLE
+        elif [ -d $root/$NOISE_SAMPLE ]; then
+            cd $root/$NOISE_SAMPLE
+            folder=$NOISE_SAMPLE
+            get_random_file 
+            NOISE_SAMPLE=$folder/$random_file
+            cd $root/$workingDIR
+
         fi
+
+        check_sample_rate $NOISE_SAMPLE
+        check_channels $NOISE_SAMPLE
+        check_bits $NOISE_SAMPLE
+        
+        local tf=$(soxi -D $file)                                                       # llargada de la mostra original
+        local tf_noise=$(soxi -D  $root/$NOISE_SAMPLE)                                  # llargada de la mostra de soroll
+        
+        #echo "FILE LENGHT: " $tf "; NOISE LENGHT: " $tf_noise
+        #change_noise_volume
+
+        if [ $(echo "$tf_noise > $tf" |bc -l) == 1 ]; then                                      # si el temps noise és superior a la mostra, no cal allargar-lo
+            #echo "CASE 1"
+            sox $root/$NOISE_SAMPLE $root/temp/noise.wav trim 0 $tf              # retallar soroll a llargada de loriginal
+            sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)     # mescla soroll retallat i original
+        else
+            #echo "CASE 2"
+            local aux=`echo "$tf/$tf_noise" | bc`                                       # Part entera
+            cp $root/$NOISE_SAMPLE $root/temp/noise_aux.wav              # Copia a la carpeta temporal per tenir audio incial a replicar
+            for (( c=1; c<=$aux; c++ )); do  
+                sox $root/$NOISE_SAMPLE $root/temp/noise_aux.wav $root/temp/noise_aux.wav          # replicar tants cops com parts enteres
+            done
+            sox $root/temp/noise_aux.wav $root/temp/noise.wav trim 0 $tf                  # Retall del soroll replicat
+            sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)         # mescla
+        fi
+        
     fi
-    #compute_SNR        NO te sentit calcular SNR pq el soroll no se lia ha aplicat el $volume, s'ha aplicat directament a la mescla.
+    
+
+    if [[ "$NOISE_SAMPLE" ==  "" ]]; then
+        NOISE_SAMPLE="random $NOISE_TYPE noise"  
+    fi
+
+    echo "noise adding to " $file "; --> noise sample:" $NOISE_SAMPLE
+
+    NOISE_SAMPLE=$NOISE_SAMPLE_AUX
+    #compute_SNR        #NO te sentit calcular SNR pq el soroll no se lia ha aplicat el $volume, s'ha aplicat directament a la mescla.
 
 
 }
+
+
+function noise_generator(){
+    NOISE_TYPE='white'
+    if [ $NOISE_TYPE = 'white' ]; then
+        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration whitenoise
+    elif [ $NOISE_TYPE = 'pink' ]; then
+        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration pinknoise 
+    elif [ $NOISE_TYPE = 'brown' ]; then
+        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration brownnoise
+    fi
+}
+
 
 
 function change_noise_volume(){
@@ -136,25 +286,31 @@ function change_noise_volume(){
     local audio=$file                                               # Treiem valors del fitxer original
     extract_from_STAT
     local RMS_file=$value                                               # valor RMS de l'àudio original
-        
-    local audio=$root/program_samples/$NOISE_SAMPLE                                     # Treiem valors del soroll
+    if [ -z $NOISE_SAMPLE ]; then
+        local audio=$root/temp/noise.wav                                    # Treiem valors del soroll
+    else
+        local audio=$root/program_samples/$NOISE_SAMPLE                                     # Treiem valors del soroll        
+    fi
     extract_from_STAT
-    local RMS_noise=$value                         
-    
+    local RMS_noise=$value      
+
+
+    local aux=`echo " scale=6; $RMS_file/$RMS_noise" | bc`
+    echo "file/noise: " $aux
     product=`echo "$RMS_noise*$ratio" | bc`
 
     volume=`echo " scale=6; $RMS_file/$product" | bc`
 
-    #echo "FILE RMS: " $RMS_file "RMS NOISE: " $RMS_noise  "VOLUME FACTOR: " $volume
+    echo "FILE RMS: " $RMS_file "RMS NOISE: " $RMS_noise  "VOLUME FACTOR: " $volume
 
     : '
-    sox -v $volume $root/program_samples/$NOISE_SAMPLE $DIR/temp/auxiliar_audio.wav
-    local audio=$DIR/temp/auxiliar_audio.wav
+    sox -v $volume $root/program_samples/$NOISE_SAMPLE $root/temp/auxiliar_audio.wav
+    local audio=$root/temp/auxiliar_audio.wav
     extract_from_STAT 
     local RMS_noise=$value    
     echo "MODIFIED NOISE RMS: " $RMS_noise  
 
-    cp $DIR/temp/auxiliar_audio.wav $root/program_samples/$noiseDIR/$(basename $NOISE_SAMPLE) 
+    cp $root/temp/auxiliar_audio.wav $root/program_samples/$noiseDIR/$(basename $NOISE_SAMPLE) 
     '
 
 }
@@ -162,7 +318,7 @@ function change_noise_volume(){
 
 function check_sample_rate(){
     file_sr=$(soxi -r $file)
-    noise_sr=$(soxi -r $root/program_samples/$NOISE_SAMPLE)
+    noise_sr=$(soxi -r $root/$NOISE_SAMPLE)
     if [ $file_sr -ne $noise_sr ]; then
         noiseDIR=${NOISE_SAMPLE%/*}
         echo "Selected noise sample has not same Sampling Freq that input file. It must be converted"
@@ -170,59 +326,127 @@ function check_sample_rate(){
         echo "Do you want to convert it? (y/n)"
         read permision
         if [ $permision = "y" ]; then
-            echo "HERE"
-            echo $(basename $NOISE_SAMPLE)
             cd $root
-            sox $root/program_samples/$NOISE_SAMPLE -r $file_sr $DIR/temp/$(basename $NOISE_SAMPLE)
-            rm $root/program_samples/$NOISE_SAMPLE
-            cp $DIR/temp/$(basename $NOISE_SAMPLE) $root/program_samples/$noiseDIR/$(basename $NOISE_SAMPLE) 
+            sox $root/$NOISE_SAMPLE -r $file_sr $root/temp/$(basename $NOISE_SAMPLE)
+            rm $root/$NOISE_SAMPLE
+            cp $root/temp/$(basename $NOISE_SAMPLE) $root/$noiseDIR/$(basename $NOISE_SAMPLE) 
 
         else
             exit
         fi
         cd $root/$workingDIR
     fi
-
 }
 
-function sample_expansion(){
-    local aux=`echo "$tf/$tf_noise" | bc`
-    cp $DIR/NOISE_SAMPLES/metro_trim.wav $DIR/temp/noise_aux.wav 
-    for (( c=1; c<=$aux; c++ )); do  
-        sox $DIR/NOISE_SAMPLES/metro_trim.wav $DIR/temp/noise_aux.wav $DIR/temp/noise_aux.wav 
-    done
-    tf_noise=$(soxi -D  $DIR/temp/noise_aux.wav)
-    sox $DIR/temp/noise_aux.wav $DIR/temp/noise.wav trim 0 $tf
-    sox -m $DIR/temp/noise.wav $file $DIR/NOISE_ADDING/$(basename $file)
+function check_channels(){
+    file_ch=$(soxi -c $file)
+    noise_ch=$(soxi -c $root/$NOISE_SAMPLE)
+    if [ $file_ch -ne $noise_ch ]; then
+        noiseDIR=${NOISE_SAMPLE%/*}
+        echo "Selected noise sample has not same number of Channels that input file. It must be converted"
+        echo "CAUTION: ORIGINAL FILE WILL BE REMOVED!!"
+        echo "Do you want to convert it? (y/n)"
+        read permision
+        if [ $permision = "y" ]; then
+            echo $(basename $NOISE_SAMPLE)
+            cd $root
+            sox $root/$NOISE_SAMPLE -c $file_sr $root/temp/$(basename $NOISE_SAMPLE)
+            rm $root/$NOISE_SAMPLE
+            cp $root/temp/$(basename $NOISE_SAMPLE) $root/$noiseDIR/$(basename $NOISE_SAMPLE) 
 
+        else
+            exit
+        fi
+        cd $root/$workingDIR
+    fi
 }
 
-function noise_generator(){
-    NOISE_TYPE='white'
-    if [ $NOISE_TYPE = 'white' ]; then
-        sox -r 44100 -c 1 -b 16 -n $DIR/temp/noise.wav synth $noise_duration whitenoise vol 0.20
-    elif [ $NOISE_TYPE = 'pink' ]; then
-        sox -r 44100 -c 1 -b 16 -n $DIR/temp/noise.wav synth $noise_duration pinknoise vol 0.20
-    elif [ $NOISE_TYPE = 'brown' ]; then
-        sox -r 44100 -c 1 -b 16 -n $DIR/temp/noise.wav synth $noise_duration brownnoise vol 0.20
+function check_bits(){
+    local file_bits=$(soxi -b $file)
+    local noise_bits=$(soxi -b $root/$NOISE_SAMPLE)
+    if [ $file_bits -ne $noise_bits ]; then
+        noiseDIR=${NOISE_SAMPLE%/*}
+        echo "Selected noise sample has not same bit number that input file. It must be converted"
+        echo "CAUTION: ORIGINAL FILE WILL BE REMOVED!!"
+        echo "Do you want to convert it? (y/n)"
+        read permision
+        if [ $permision = "y" ]; then
+            echo $(basename $NOISE_SAMPLE)
+            cd $root
+            sox $root/$NOISE_SAMPLE -b $file_sr $root/temp/$(basename $NOISE_SAMPLE)
+            rm $root/$NOISE_SAMPLE
+            cp $root/temp/$(basename $NOISE_SAMPLE) $root/$noiseDIR/$(basename $NOISE_SAMPLE) 
+
+        else
+            exit
+        fi
+        cd $root/$workingDIR
     fi
 }
 
 
+
+
+function sample_expansion(){
+    local aux=`echo "$tf/$tf_noise" | bc`
+    cp $DIR/NOISE_SAMPLES/metro_trim.wav $root/temp/noise_aux.wav 
+    for (( c=1; c<=$aux; c++ )); do  
+        sox $DIR/NOISE_SAMPLES/metro_trim.wav $root/temp/noise_aux.wav $root/temp/noise_aux.wav 
+    done
+    tf_noise=$(soxi -D  $root/temp/noise_aux.wav)
+    sox $root/temp/noise_aux.wav $root/temp/noise.wav trim 0 $tf
+    sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)
+
+}
+
+
 function FIR_conv(){
-    echo "RIR filter to  " $file 
-    folder_name='RIR_filter'
-    create_folder $DIR $folder_name
+
+    if [ "$out_dir" == "" ]; then               #OUTPUT DIR NOT SPECIFIED
+        cd $DIR
+        folder_name='RIR_filter'
+        create_folder $DIR $folder_name
+    fi 
+
     cd $root/$workingDIR
-    sox -v 1.5 $file $DIR/RIR_filter/$(basename $file) fir $root/program_samples/$RIR_file   
+    
+    RIR_file_aux=$RIR_file
+
+
+    if [ -f $root/$RIR_file ]; then
+        sox -v 0.5 $file $DIR/$folder_name/$(basename $file) fir $root/$RIR_file
+    elif [ -d $root/$RIR_file ]; then
+        cd $root/$RIR_file
+        get_random_file 
+        cd $root/$workingDIR
+        sox -v 0.9 $file $DIR/$folder_name/$(basename $file) fir $root/$RIR_file/$random_file
+        RIR_file=$random_file
+    fi
+    echo "RIR filter to  " $file "--> file: " $RIR_file
+    
+    RIR_file=$RIR_file_aux
+
+
+}
+
+function freq_masking(){
+    if [ "$out_dir" == "" ]; then               #OUTPUT DIR NOT SPECIFIED
+        cd $DIR
+        folder_name='FREQ_MASKING'
+        create_folder $DIR $folder_name
+    fi 
+    cd $root/$workingDIR
+
+    local f_ini=`echo " $f_centre-$width" | bc`
+    local f_fin=`echo " $f_centre+$width" | bc`
+    #echo $f_ini $f_fin
+    sox $file $DIR/$folder_name/$(basename $file) sinc $f_fin-$f_ini
+
+    echo "Frequency masking to  " $file "--> f_centre: " $f_centre " width: " $width
 
 }
 
 
-function show_Directori(){
-    DIRact="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null )"
-    echo $DIRact
-}
 
 function chorus_efect(){
     folder_name='CHORUS'
@@ -305,13 +529,17 @@ function extract_from_STAT(){
 function compute_SNR(){
     
     value_name="RMS     amplitude:"
-    local audio=$DIR/NOISE_ADDING/$(basename $file)                     # Treiem valors del fitxer original
+    local audio=$DIR/$folder_name/$(basename $file)                     # Treiem valors del fitxer original
     extract_from_STAT
     local RMS_file=$value                                               # valor RMS de l'àudio original
         
-    local audio=$root/program_samples/$noiseDIR/$(basename $NOISE_SAMPLE)            # Treiem valors del soroll
+    if [ -z $NOISE_SAMPLE ]; then
+        local audio=$root/temp/noise.wav                                    # Treiem valors del soroll
+    else
+        local audio=$root/program_samples/$NOISE_SAMPLE                                     # Treiem valors del soroll        
+    fi
     extract_from_STAT
-    local RMS_noise=$value                                              # valor RMS del soroll
+    local RMS_noise=$value      
 
     echo "RMS FROM FILE: " $RMS_file " RMS FROM NOISE: " $RMS_noise
 
@@ -340,111 +568,10 @@ function room_impulse_response(){
     reverb_time=0.2
     echo $reverb_time
     cd $root
-    python3 ROOM_generator.py $DIR/temp $fs
+    python3 ROOM_generator.py $root/temp $fs
     
     cd $DIR
-    sox $DIR/WAV_FILES/$file $DIR/RIR_GENERATOR/$(basename $file) fir $DIR/temp/coefs_RIR.txt     
+    sox $DIR/WAV_FILES/$file $DIR/RIR_GENERATOR/$(basename $file) fir $root/temp/coefs_RIR.txt     
 
 }
 
-# FUNCIONS D'INFORMACIÓ D'ERRRORS
-
-function IN_FILE_error(){
-    cd $root
-    sed -n '2,4p' ./program/usage.sh
-    sed -n '14,15p' ./program/usage.sh
-    sed -n '16,20p' ./program/usage.sh
-}
-
-function DA_method_error(){
-    cd $root
-    sed -n '4,5p' ./program/usage.sh
-    sed -n '14,15p' ./program/usage.sh
-    sed -n '20,28p' ./program/usage.sh 
-}
-
-function IN_OPTION_error(){
-    cd $root
-    sed -n '6,8p' ./program/usage.sh
-    sed -n '14,15p' ./program/usage.sh
-    sed -n '29,32p' ./program/usage.sh
-}
-
-function check_configuration(){
-#This function is used to check the parameters specified in the configuration.sh file to fit the requireds by the programm. '
-    pitch_conf_error
-    time_conf_error
-    noise_conf_error
-    RIR_conf_error
-}
-
-function pitch_conf_error(){
-    local re='^[0-9]+([.][0-9]+)?$'
-    if [ $shift_mode != "random" ] && [ $shift_mode != "fixed" ]; then
-        echo "PITCH SHITING CONFIGURATION ERROR --> shift_mode is not [fixed] or [random]"
-        exit
-    elif ! [[ $pitch_factor =~ $re ]] ; then
-        echo "PITCH SHITING CONFIGURATION ERROR --> pitch_factor is not a number"
-        exit
-    elif [[ $shift_start != "" ]] && ! [[ $shift_start =~ $re ]] ; then
-        echo "PITCH SHITING CONFIGURATION ERROR --> shift_start is not a number"
-        exit
-    elif [[ $shift_end != "" ]] && ! [[ $shift_end =~ $re ]] ; then
-        echo "PITCH SHITING CONFIGURATION ERROR --> shift_end is not a number"
-        exit
-    fi
-}
-
-function time_conf_error(){
-    local re='^[0-9]+([.][0-9]+)?$'
-    if [ $stretch_mode != "random" ] && [ $stretch_mode != "fixed" ]; then
-        echo "TIME STRETCHING CONFIGURATION ERROR --> stretch_mode is not [fixed] or [random]"
-        exit
-    elif ! [[ $speed_factor =~ $re ]] ; then
-        echo "TIME STRETCHING CONFIGURATION ERROR --> speed_factor is not a number"
-        exit
-    elif [[ $stretch_start != "" ]] && ! [[ $stretch_start =~ $re ]] ; then
-        echo "TIME STRETCHING CONFIGURATION ERROR --> stretch_start is not a number"
-        exit
-    elif [[ $stretch_end != "" ]] && ! [[ $stretch_end =~ $re ]] ; then
-        echo "TIME STRETCHING CONFIGURATION ERROR --> stretch_end is not a number"
-        exit
-    fi
-}
-
-function noise_conf_error(){
-    if [[ $NOISE_SAMPLE != "" ]]; then
-        if ! [ -f $root/program_samples/$NOISE_SAMPLE ]; then
-        echo "NOISE ADDING CONFIGURATION ERROR --> $NOISE_SAMPLE is not a file in /program_samples"  
-        exit  
-        fi
-    fi
-}
-
-
-function RIR_conf_error(){
-    if ! [ -f $root/program_samples/$RIR_file ]; then
-        echo "RIR FILTER CONFIGURATION ERROR --> $RIR_file is not a file in /program_samples"  
-        exit  
-    fi
-}
-
-function  chorus_conf_error(){
-    local re='^[0-9]+([.][0-9]+)?$'
-    if [[ $delay != "" ]] && ! [[ $delay =~ $re ]] ; then
-        echo "CHORUS CONFIGURATION ERROR --> delay is not a number"
-        exit
-    elif [[ $decay != "" ]] && ! [[ $decay =~ $re ]] ; then
-        echo "CHORUS CONFIGURATION ERROR --> decay is not a number"
-        exit
-    elif [[ $speed != "" ]] && ! [[ $speed =~ $re ]] ; then
-        echo "CHORUS CONFIGURATION ERROR --> speed is not a number"
-        exit
-    elif [[ $depth != "" ]] && ! [[ $depth =~ $re ]] ; then
-        echo "CHORUS CONFIGURATION ERROR --> depth is not a number"
-        exit
-    elif [ $wave_type != "t" ] || [ $wave_type != "t" ]; then
-        echo "CHORUS CONFIGURATION ERROR --> wave_type should be [t] or [s]"
-        exit
-    fi
-}

@@ -22,6 +22,7 @@ OPTIONS:
                     --> time   : time stretching
                     --> RIR   : RIR generation
                     --> noise  : noise adding
+                    --> masking  : frequency masking
                     --> chorus : chorus efect
                     --> delay  : delay efect
                     --> reverb : reverb efect

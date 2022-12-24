@@ -60,3 +60,15 @@ function define_out_dir(){
 
 
 #convert_all_SR $1
+
+function linear_2_dB(){
+    local aux=`echo " l($input)/l(10) " | bc -l`
+    output=`echo " 20*$aux " | bc`
+}
+
+function dB_2_linear(){
+    #Es converteix el ratio de dB a valor escalar.
+    local aux=`echo " scale=4; $input/20 " | bc`
+    output=`echo " e(l(10)*$aux) " | bc -l `
+    #echo "RATIO in linear: " $ratio
+}

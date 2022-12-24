@@ -17,9 +17,9 @@
         - (number number)   --> random end value betweeen a touple interval.
         - [""]              --> random end value.
 '
-pitch_factor=""
-shift_start=""
-shift_end=""
+pitch_factor=(0.9 1.1)
+shift_start=ini
+shift_end=end
 
 : ' ************************************ TIME STRETCHING  *********************************** 
     speed_factor
@@ -48,16 +48,16 @@ stretch_end=""
     ratio:
         - number    --> ratio between signal al noise. Ex. If ratio=3, Signal=3*Noise.
 '
-NOISE_SAMPLE="program_samples/sound-bible-44100/"
-ratio=6
+NOISE_SAMPLE=""
+ratio_dB=-6
 
-#"sound-bible/noise-sound-bible-0014.wav"
+#"sound-bible-44100/noise-sound-bible-0014.wav"
 
 : ' ************************************ RIR FILTER  *********************************** 
     RIR_file:
         -[file.txt]  --> txt file included in the program_samples directory.
 '
-RIR_file="../OUT_program_samples/RIR_files/"   
+RIR_file="../OUT_program_samples/RIR_files/air_binaural_meeting_1_0_4.txt"   
 #air_binaural_meeting_1_0_4.txt
 
 : ' ************************************ FREQUENCY MASKING*********************************** 

@@ -187,12 +187,6 @@ function noise_adding(){
     fi 
 
     cd $root/$workingDIR
-    : '
-    #Es converteix el ratio de dB a valor escalar.
-    local aux=`echo " scale=4; $ratio/20 " | bc`
-    ratio=`echo " e(l(10)*$aux) " | bc -l `
-    echo "RATIO in linear: " $ratio
-    '
 
     NOISE_SAMPLE_AUX=$NOISE_SAMPLE
 
@@ -206,15 +200,12 @@ function noise_adding(){
     if [ -z $NOISE_SAMPLE ]; then                                        
         
         noise_generator $file_duration $file_sr $file_channels $file_bits              # Sintesi del soroll
-        #change_noise_volume
-
-        sox -m -v 0.1 $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)           # mescla
-        #sox -m -v $volume $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)
+        noise_file=$root/temp/noise.wav
+        adjust_gain
 
     else 
         #echo "REAL NOISE"
-        
-        cd $root/$workingDIR
+                cd $root/$workingDIR
         if [ -f $root/$NOISE_SAMPLE ]; then
             NOISE_SAMPLE=$NOISE_SAMPLE
         elif [ -d $root/$NOISE_SAMPLE ]; then
@@ -223,7 +214,6 @@ function noise_adding(){
             get_random_file 
             NOISE_SAMPLE=$folder/$random_file
             cd $root/$workingDIR
-
         fi
 
         check_sample_rate $NOISE_SAMPLE
@@ -237,19 +227,21 @@ function noise_adding(){
         #change_noise_volume
 
         if [ $(echo "$tf_noise > $tf" |bc -l) == 1 ]; then                                      # si el temps noise és superior a la mostra, no cal allargar-lo
-            #echo "CASE 1"
-            sox $root/$NOISE_SAMPLE $root/temp/noise.wav trim 0 $tf              # retallar soroll a llargada de loriginal
-            sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)     # mescla soroll retallat i original
+            echo "CASE 1"
+            sox $root/$NOISE_SAMPLE $root/temp/noise.wav trim 0 $tf                 # retallar soroll a llargada de loriginal
+            #sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)     # mescla soroll retallat i original
         else
-            #echo "CASE 2"
+            echo "CASE 2"
             local aux=`echo "$tf/$tf_noise" | bc`                                       # Part entera
             cp $root/$NOISE_SAMPLE $root/temp/noise_aux.wav              # Copia a la carpeta temporal per tenir audio incial a replicar
             for (( c=1; c<=$aux; c++ )); do  
                 sox $root/$NOISE_SAMPLE $root/temp/noise_aux.wav $root/temp/noise_aux.wav          # replicar tants cops com parts enteres
             done
             sox $root/temp/noise_aux.wav $root/temp/noise.wav trim 0 $tf                  # Retall del soroll replicat
-            sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)         # mescla
+            #sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)         # mescla
         fi
+        noise_file=$root/temp/noise.wav
+        adjust_gain
         
     fi
     
@@ -270,14 +262,66 @@ function noise_adding(){
 function noise_generator(){
     NOISE_TYPE='white'
     if [ $NOISE_TYPE = 'white' ]; then
-        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration whitenoise
+        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration whitenoise vol 0.05
     elif [ $NOISE_TYPE = 'pink' ]; then
-        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration pinknoise 
+        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration pinknoise vol 0.05
     elif [ $NOISE_TYPE = 'brown' ]; then
-        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration brownnoise
+        sox -r $file_sr -c $file_channels -b $file_bits -n $root/temp/noise.wav synth $file_duration brownnoise vol 0.05
     fi
 }
 
+
+function adjust_gain(){
+        value_name="RMS     amplitude:"
+        
+        audio=$file
+        extract_from_STAT
+        file_RMS=$value
+
+        audio=$noise_file
+        extract_from_STAT
+        noise_RMS=$value
+
+        echo "FILE RMS VALUE" $file_RMS
+        echo "NOISE RMS VALUE" $noise_RMS
+
+        input=$ratio_dB
+        dB_2_linear
+        ratio_lin=$output
+        echo "RATIO_LIN" $ratio_lin
+
+        factor_lin=`echo " scale=6; $ratio_lin*$noise_RMS/$file_RMS" | bc`
+
+        input=$factor_lin
+        linear_2_dB
+        factor_dB=$output 
+        echo "FACTOR: " $factor_lin
+        echo "FACTOR(dB): " $factor_dB
+
+
+        sox $file $root/temp/amp_file.wav gain -b $factor_dB
+        #sox -v $factor_lin $file $root/temp/amp_file.wav 
+
+        audio=$root/temp/amp_file.wav
+        extract_from_STAT
+        amp_file_RMS=$value
+        echo "AMP FILE RMS VALUE" $amp_file_RMS
+
+        # !!!! sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file) gain -b $output    # INCORRECTE PQ AMPLIFIQUES LA MESCLA
+ 
+        sox -m $root/temp/noise.wav $root/temp/amp_file.wav $DIR/$folder_name/$(basename $file)   # mescla
+        
+        audio=$DIR/$folder_name/$(basename $file) 
+        extract_from_STAT
+        mix_file_RMS=$value
+
+        echo "MIX 1 FILE RMS VALUE" $mix_file_RMS
+
+        SNR_lin=`echo " scale=6; $ratio_lin*$mix_file_RMS/$noise_RMS" | bc`
+        echo "SNR_lin: " $SNR_lin
+
+
+}
 
 
 function change_noise_volume(){
@@ -448,58 +492,6 @@ function freq_masking(){
 
 
 
-function chorus_efect(){
-    folder_name='CHORUS'
-    create_folder $DIR $folder_name 
-    cd $DIR/WAV_FILES
-
-    if [ $delay ] && [ $decay ] && [ $speed ] && [ $depth ]; then
-        echo "HERE IN DEFINED PARAMETRES"
-        sox $file $DIR/CHORUS/$(basename $file) chorus 0.5 0.5 $delay $decay $speed $depth -$wave_type
-        echo $delay $decay $speed $depth $wave_type    
-    else
-        echo "HERE IN RANDOM PARAMETRES"
-        local delay=$(seq 20 .1 100 | shuf | head -n1)
-        local decay=0.4
-        local speed=$(seq 0.1 .01 5 | shuf | head -n1)
-        local depth=$(seq 1 1 10 | shuf | head -n1)
-        echo $delay $decay $speed $depth     
-        sox $file $DIR/CHORUS/$(basename $file) chorus 0.5 0.5 $delay $decay $speed $depth -t 
-    fi  
-}
-
-function delay_effect(){
-    folder_name='DELAY_EFFECT'
-    create_folder $DIR $folder_name 
-    cd $DIR/WAV_FILES
-    if [ $delay ] && [ $decay ]; then
-        echo "HERE IN DEFINED PARAMETRES"
-        sox $file $DIR/DELAY_EFFECT/$(basename $file) echos 0.5 0.5 $delay $decay
-        echo $delay $decay
-    else
-        echo "HERE IN RANDOM PARAMETRES"
-        local delay=$(seq 100 100 1000 | shuf | head -n1)
-        local decay=$(seq 0.1 .1 1 | shuf | head -n1)
-        sox $file $DIR/DELAY_EFFECT/$(basename $file) echos 0.5 0.5 $delay $decay
-        echo $delay $decay
-    fi  
-}
-
-function reverb_effect(){
-    folder_name='REVERB_EFFECT'
-    create_folder $DIR $folder_name 
-    cd $DIR/WAV_FILES
-    if [ $reverberance ]; then
-        echo "HERE IN DEFINED PARAMETRES"
-        sox -v 0.9 $file $DIR/REVERB_EFFECT/$(basename $file) reverb $reverberance
-        echo $reverberance
-    else
-        echo "HERE IN RANDOM PARAMETRES"
-        local reverberance=$(seq 0 1 100 | shuf | head -n1)
-        sox -v 0.9 $file $DIR/REVERB_EFFECT/$(basename $file) reverb $reverberance
-        echo $reverberance
-    fi  
-}
 
 function extract_from_STAT(){
     

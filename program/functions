@@ -282,21 +282,21 @@ function adjust_gain(){
         extract_from_STAT
         noise_RMS=$value
 
-        echo "FILE RMS VALUE" $file_RMS
-        echo "NOISE RMS VALUE" $noise_RMS
+        #echo "FILE RMS VALUE" $file_RMS
+        #echo "NOISE RMS VALUE" $noise_RMS
 
         input=$ratio_dB
         dB_2_linear
         ratio_lin=$output
-        echo "RATIO_LIN" $ratio_lin
+        #echo "RATIO_LIN" $ratio_lin
 
         factor_lin=`echo " scale=6; $ratio_lin*$noise_RMS/$file_RMS" | bc`
 
         input=$factor_lin
         linear_2_dB
         factor_dB=$output 
-        echo "FACTOR: " $factor_lin
-        echo "FACTOR(dB): " $factor_dB
+        #echo "FACTOR: " $factor_lin
+        #echo "FACTOR(dB): " $factor_dB
 
 
         sox $file $root/temp/amp_file.wav gain -b $factor_dB
@@ -305,7 +305,7 @@ function adjust_gain(){
         audio=$root/temp/amp_file.wav
         extract_from_STAT
         amp_file_RMS=$value
-        echo "AMP FILE RMS VALUE" $amp_file_RMS
+        #echo "AMP FILE RMS VALUE" $amp_file_RMS
 
         # !!!! sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file) gain -b $output    # INCORRECTE PQ AMPLIFIQUES LA MESCLA
  
@@ -315,10 +315,10 @@ function adjust_gain(){
         extract_from_STAT
         mix_file_RMS=$value
 
-        echo "MIX 1 FILE RMS VALUE" $mix_file_RMS
+        #echo "MIX 1 FILE RMS VALUE" $mix_file_RMS
 
         SNR_lin=`echo " scale=6; $ratio_lin*$mix_file_RMS/$noise_RMS" | bc`
-        echo "SNR_lin: " $SNR_lin
+        #echo "SNR_lin: " $SNR_lin
 
 
 }

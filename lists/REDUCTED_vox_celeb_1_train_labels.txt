@@ -1,0 +1,10 @@
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/Wy8sFgdylRc/00022.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/Wy8sFgdylRc/00124.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/Wy8sFgdylRc/00116.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/NQxx1WJcaE8/00028.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/NQxx1WJcaE8/00013.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/NQxx1WJcaE8/00059.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/nQZLZ8uoddE/00004.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/NQxx1WJcaE8/00046.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/HoV3UgQBvh4/00016.wav
+DATABASES/VoxCeleb/VoxCeleb1/dev/id10343/VHJa1y8stE0/00006.wav

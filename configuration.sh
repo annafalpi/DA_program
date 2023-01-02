@@ -17,7 +17,7 @@
         - (number number)   --> random end value betweeen a touple interval.
         - [""]              --> random end value.
 '
-pitch_factor=(0.9 1.1)
+pitch_factor=2
 shift_start=ini
 shift_end=end
 
@@ -37,9 +37,9 @@ shift_end=end
         - (number number)   --> random end value betweeen a touple interval.
         - [""]              --> random end value.  
 '
-speed_factor=""
-stretch_start=""
-stretch_end=""
+speed_factor=2
+stretch_start=1.5
+stretch_end=3
 
 : ' ************************************ NOISE ADDING  *********************************** 
     NOISE_SAMPLE:

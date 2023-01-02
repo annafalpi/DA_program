@@ -1,0 +1,14 @@
+.././input_files/upc_ca_eli_clunits-1.2.wav
+.././input_files/upc_ca_pau_clunits-1.2.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100004.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100009.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100006.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100008.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100002.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100000.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100005.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100001.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100003.wav
+.././input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100007.wav
+
+input_files/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100004.wav

@@ -145,7 +145,7 @@ function pitch_conf_error(){
             fi
         elif [[ $len_start == 1 ]] && [[ $len_end == 2 ]]; then
             if [ $(echo "$shift_start > ${shift_end[0]}" |bc -l) == 1 ]; then
-                echo "HERE"
+                #echo "HERE"
                 echo "PITCH SHIFTING CONFIGURATION ERROR 2 --> shift_end[0](" ${shift_end[0]} ") should be lower than shift_start(" $shift_start ")."
                 exit
             fi
@@ -341,7 +341,7 @@ function check_time_limits(){
     local len=${#end[@]}
     if [[ $end != "" ]] && [[ $end != "end" ]]; then
         if [ $len == 1 ]; then 
-            echo "HERE" $end $tf
+            #echo "HERE" $end $tf
             if [ $(echo "$end > $tf" |bc -l) == 1 ]; then
                 echo $ID "CONFIGURATION  TIME LIMIT ERROR end --> " $end " is greater than audio duration"
                 exit
@@ -390,7 +390,7 @@ function noise_conf_error(){
 
 
 function RIR_conf_error(){
-        echo $RIR_file  
+        #echo $RIR_file  
         IFS='/' read -ra path <<< "$RIR_file"
         local sample_name=${path[-1]}
         local sample_dir=""

@@ -20,20 +20,12 @@ function show_Directori(){
     echo $DIRact
 }
 
-function convert_all_SR(){
-    cd $root/program_samples/sound-bible
-    show_Directori
-    for filename in $(ls $1); do
-        echo $filename
-        sox $1/$filename -r 44100 -b 16 -c 1 $1/temp/$filename
-    done
-
-}
 
 function define_out_dir(){
+    #redefineix els paràmetres $folder_name i $DIR per adaparlo al indicat i que es canvï automàticament
     if [ "$out_dir" != "" ]; then                     # si s'especifica directori de sortida.
         DIR=$root
-        echo "Saving dir specificated: " $out_dir
+        #echo "Saving dir specificated: " $out_dir
         str=$out_dir
         IFS='/' read -ra path <<< "$str"
         
@@ -56,10 +48,11 @@ function define_out_dir(){
             DIR=$DIR"/"$i
         done
     fi
+
+    #echo "REDEFINED FOLDER: " $folder_name
+    #echo "REDEFINED DIR: " $DIR
 }
 
-
-#convert_all_SR $1
 
 function linear_2_dB(){
     local aux=`echo " l($input)/l(10) " | bc -l`

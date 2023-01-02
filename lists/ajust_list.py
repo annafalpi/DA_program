@@ -7,7 +7,7 @@ for lin in my_file:
     i=i+1
 print(len(data))
 mod_data = []
-folder="../../DATABASES/VoxCeleb/VoxCeleb1/dev"
+folder="../../../../veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
 
 for n in data:
     split_data=n.split('.')

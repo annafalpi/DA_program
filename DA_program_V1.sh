@@ -112,6 +112,7 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
         exit
     fi
     define_out_dir $out_dir
+    cd $root
     if [ -z $2 ] && [ $1 ]; then
         DA_method_error
     else
@@ -143,7 +144,6 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             echo "************************************************* "
         fi
         '
-
     
         auxDIR=$DIR                             #còpia del directori i carpeta de la reassignació de sortida
         aux_folder_name=$folder_name
@@ -153,12 +153,22 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             workingDIR="$(dirname -- $line)"
             #echo "FILE: " $file
             #echo "DIR: " $workingDIR
+            
+            ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/"
+            sub_dir=`echo ${line##*\$ref_DIR}`
+
+            #ref_DIR="PROVAR/CARPETA"
+            #sub_DIR=`echo ${line##*\$ref_DIR}`
+
+            #echo $sub_DIR
+            
             DIR=$DIR/$folder_name
             cd $DIR
 
             str=$workingDIR
-            IFS='/' read -ra path <<< "$str"    #treiem les barres
-            folder_name=${path[-1]}
+            IFS='/' read -ra path <<< "$sub_DIR"    # treiem les barres
+            unset path[-1]                          # ens carreguem el fitxer de la cadena
+            folder_name=${path[-1]}                 # carpeta final
             #echo "FINAL folder:" $folder_name
             unset path[-1]
             
@@ -175,7 +185,7 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
                 cd $DIR
                 mkdir $folder_name
             fi   
-
+            
             if [ $2 == "rand" ];then
                 #echo "RANDOM METHOD"
                 items=("pitch" "time" "noise" "RIR" "masking")
@@ -183,6 +193,8 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
                 size=${#items[@]}
                 randomindex=$(($RANDOM % $size))
                 rand_method=${items[$randomindex]}
+            else
+                rand_method=$2
             fi    
             #echo $rand_method     
             

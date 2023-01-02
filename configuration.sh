@@ -57,7 +57,7 @@ ratio_dB=-6
     RIR_file:
         -[file.txt]  --> txt file included in the program_samples directory.
 '
-RIR_file="../OUT_program_samples/RIR_files/air_binaural_meeting_1_0_4.txt"   
+RIR_file="/program_samples/AIR_Database/air_binaural_meeting_1_0_4.txt"   
 #air_binaural_meeting_1_0_4.txt
 
 : ' ************************************ FREQUENCY MASKING*********************************** 

@@ -57,46 +57,46 @@ elif [[ -f $1 ]] && [[ "${n##*.}" != 'txt' ]] ; then
 
     if [ -z $2 ] && [ $1 ]; then
         DA_method_error
-    elif [ $2 = "pitch" ]; then                           # APLICAR PITCH SHIFT I GUARDAR-HO EN UNA CARPETA
+    elif [ $2 = "pitch" ] || [[ $2 = "PITCH" ]] || [[ $2 = "Pitch" ]] ; then                           # APLICAR PITCH SHIFT I GUARDAR-HO EN UNA CARPETA
         cd $root
         echo "********* PITCH SHIFTING CONFIGURATION: ******** "
-        sed -n '20,22p' ./configuration.sh
+        sed -n '18,20p' ./configuration.sh
         echo "************************************************ "
         cd $root/$workingDIR
         ID=$2
         check_time_limits $ID $file $shift_start $shift_end    
         pitch_shifting $file $out_dir                       #Per poder aplicar correctament el input de la funció
      
-    elif [ $2 = "time" ]; then
+    elif [[ $2 = "time" ]] || [[ $2 = "TIME" ]] || [[ $2 = "Time" ]]  ;  then
         cd $root
         echo "********* TIME STRETCHING CONFIGURATION: ******** "
-        sed -n '40,42p' ./configuration.sh
+        sed -n '38,40p' ./configuration.sh
         echo "************************************************ "
         cd $root/$workingDIR 
         ID=$2
         check_time_limits $ID $file $stretch_start $stretch_end    
         time_scretching $file
     
-    elif [ $2 = "noise" ]; then
+    elif [ $2 = "noise" ] || [[ $2 = "NOISE" ]] || [[ $2 = "Noise" ]] ; then
         cd $root
         echo "********* NOISE ADDING CONFIGURATION: ******** "
-        sed -n '51,52p' ./configuration.sh
+        sed -n '50,51p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         noise_adding $file
 
-    elif [ $2 = "RIR" ];then
+    elif [ $2 = "RIR" ] || [[ $2 = "rir" ]] || [[ $2 = "Rir" ]] ;then
         cd $root
         echo "********* RIR FILTER CONFIGURATION: ******** "
-        sed -n '56,56p' ./configuration.sh
+        sed -n '57,57p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         FIR_conv $file
 
-    elif [ $2 = "masking" ];then
+    elif [ $2 = "masking" ] || [[ $2 = "MASKING" ]] || [[ $2 = "Masking" ]] ;then
         cd $root
         echo "********* FREQUENCY MASKING CONFIGURATION******** "
-        sed -n '65,66p' ./configuration.sh
+        sed -n '68,69p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         freq_masking $file
@@ -154,11 +154,11 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             #echo "FILE: " $file
             #echo "DIR: " $workingDIR
             
-            ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/"
-            sub_dir=`echo ${line##*\$ref_DIR}`
-
-            #ref_DIR="PROVAR/CARPETA"
+            ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
             #sub_DIR=`echo ${line##*\$ref_DIR}`
+
+            ref_DIR="PROVAR/CARPETA"
+            sub_DIR=`echo ${line##*\$ref_DIR}`
 
             #echo $sub_DIR
             
@@ -167,11 +167,20 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
 
             str=$workingDIR
             IFS='/' read -ra path <<< "$sub_DIR"    # treiem les barres
-            unset path[-1]                          # ens carreguem el fitxer de la cadena
+            len=${#path[@]}
+            #echo "LEN" $len
+            #echo "path"
+            #for i in ${path[@]} ; do
+            #    echo $i
+            #done
+
+            #echo "PATH: " ${path[@]}
+            unset path[-1]                         # ens carreguem el fitxer de la cadena
             folder_name=${path[-1]}                 # carpeta final
             #echo "FINAL folder:" $folder_name
             unset path[-1]
             
+            #echo "PATH: " ${path[@]}
    
             for i in "${path[@]}"; do
                 if [ ! -d $DIR/$i ] ; then
@@ -188,7 +197,7 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             
             if [ $2 == "rand" ];then
                 #echo "RANDOM METHOD"
-                items=("pitch" "time" "noise" "RIR" "masking")
+                items=( "time" "noise" "RIR" "masking")             #NO PITCH ITEM
                 # Obtener un valor random del array
                 size=${#items[@]}
                 randomindex=$(($RANDOM % $size))
@@ -198,23 +207,23 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             fi    
             #echo $rand_method     
             
-            if [ $rand_method = "pitch" ]; then
+            if [ $rand_method = "pitch" ] || [[ $rand_method = "PITCH" ]] || [[ $rand_method = "Pitch" ]] ; then
                 cd $root/$workingDIR
                 ID=$rand_method
                 check_time_limits $ID $file $shift_start $shift_end   
                 pitch_shifting $file
-            elif [ $rand_method = "time" ]; then
+            elif [ $rand_method = "time" ] || [[ $rand_method = "TIME" ]] || [[ $rand_method = "Time" ]] ; then
                 cd $root/$workingDIR 
                 ID=$rand_method
                 check_time_limits $ID $file $stretch_start $stretch_end    
                 time_scretching $file
-            elif [ $rand_method = "noise" ]; then
+            elif [ $rand_method = "noise" ] || [[ $rand_method = "NOISE" ]] || [[ $rand_method = "Noise" ]] ; then
                 cd $root/$workingDIR
                 noise_adding $file
-            elif [ $rand_method = "RIR" ];then
+            elif [ $rand_method = "RIR" ] || [[ $rand_method = "rir" ]] || [[ $rand_method = "Rir" ]] ; then
                 cd $root/$workingDIR
                 FIR_conv $file
-            elif [ $rand_method = "masking" ];then
+            elif [ $rand_method = "masking" ] || [[ $rand_method = "MASKING" ]] || [[ $rand_method = "Masking" ]] ; then
                 cd $root/$workingDIR
                 freq_masking $file
             else
@@ -250,10 +259,10 @@ elif  [ -d $1 ]; then
     
     if [ -z $2 ] && [ $1 ]; then
         DA_method_error
-    elif [ $2 = "pitch" ]; then
+    elif [ $2 = "pitch" ] || [[ $2 = "PITCH" ]] || [[ $2 = "Pitch" ]] ; then
         cd $root
         echo "********* PITCH SHIFTING CONFIGURATION: ******** "
-        sed -n '20,22p' ./configuration.sh
+        sed -n '18,20p' ./configuration.sh
         echo "************************************************ "
         cd $root/$workingDIR
         ID=$2
@@ -262,10 +271,10 @@ elif  [ -d $1 ]; then
             pitch_shifting $file
         done
 
-    elif [ $2 = "time" ]; then
+    elif [ $2 = "time" ] || [[ $2 = "TIME" ]] || [[ $2 = "Time" ]] ; then
         cd $root
         echo "********* TIME STRETCHING CONFIGURATION: ******** "
-        sed -n '40,42p' ./configuration.sh
+        sed -n '38,40p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         ID=$2
@@ -274,29 +283,29 @@ elif  [ -d $1 ]; then
             time_scretching $file
         done
 
-    elif [ $2 = "noise" ]; then
+    elif [ $2 = "noise" ] || [[ $2 = "NOISE" ]] || [[ $2 = "Noise" ]] ; then
         cd $root
         echo "********* NOISE ADDING CONFIGURATION: ******** "
-        sed -n '51,52p' ./configuration.sh
+        sed -n '50,51p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         for file in *.wav; do
             noise_adding $file
         done
-    elif [ $2 = "RIR" ];then
+    elif [ $2 = "RIR" ] || [[ $2 = "rir" ]] || [[ $2 = "Rir" ]] ;then
         cd $root
         echo "********* RIR FILTER CONFIGURATION: ************* "
-        sed -n '56,56p' ./configuration.sh
+        sed -n '57,57p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         for file in *.wav; do
             FIR_conv $file
         done
 
-    elif [ $2 = "masking" ];then
+    elif [ $2 = "masking" ] || [[ $2 = "MASKING" ]] || [[ $2 = "Masking" ]] ; then
         cd $root
         echo "********* FREQUENCY MASKING CONFIGURATION******** "
-        sed -n '65,66p' ./configuration.sh
+        sed -n '68,69p' ./configuration.sh
         echo "************************************************* "
         cd $root/$workingDIR
         for file in *.wav; do

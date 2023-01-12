@@ -35,6 +35,8 @@ function pitch_shifting(){
     fi 
     
     cd $root/$workingDIR 
+    local name="${file%.*}"
+    local out_name=$name"_pitch.wav"  
 
     local tf=$(soxi -D  $file)
 
@@ -83,14 +85,14 @@ function pitch_shifting(){
         if ! [[ $shift_start == 0 ]] && ! [[ $shift_end == $tf  ]]; then
             #echo "SOX BEND"
                 local aux_end=`echo "$shift_end-$shift_start" | bc`
-                sox -v 0.5 $file $DIR/$folder_name/$(basename $file) bend $shift_start,$cents_pitch_factor,$aux_end      #inci, cents, longitud del canvi (NO final del canvi)          
+                sox -v 0.5 $file $DIR/$folder_name/$out_name bend $shift_start,$cents_pitch_factor,$aux_end      #inci, cents, longitud del canvi (NO final del canvi)          
         else
             #echo "SOX PITCH"
-            sox -v 0.99 $file $DIR/$folder_name/$(basename $file) pitch $cents_pitch_factor
+            sox -v 0.99 $file $DIR/$folder_name/$out_name pitch $cents_pitch_factor
         fi
     fi  
 
-    echo "pitch shiting to " $file  "; --> pitch_factor: " $pitch_factor" shift_start: " $shift_start "shift_end: " $shift_end
+    echo -e "pitch \t" $file  ";\t --> pitch_factor: " $pitch_factor" shift_start: " $shift_start "shift_end: " $shift_end
     
     pitch_factor=$pitch_factor_aux
     shift_start=$shift_start_aux
@@ -109,7 +111,8 @@ function time_scretching(){
     fi 
 
     cd $root/$workingDIR 
-    
+    local name="${file%.*}"
+    local out_name=$name"_time.wav"  
     local tf=$(soxi -D  $file)
 
     speed_factor_aux=$speed_factor
@@ -151,15 +154,15 @@ function time_scretching(){
     else
         if [[ $stretch_start == 0 ]] && [[ $stretch_end == $tf  ]]; then
             #echo "ALL FILE SPEED CHANGE"
-            sox $file $DIR/$folder_name/$(basename $file) tempo $speed_factor
+            sox $file $DIR/$folder_name/$out_name tempo $speed_factor
         else 
             trim_segments $tf
             sox $root/temp/segment2.wav $root/temp/segment2_speed.wav tempo $speed_factor           #TIME STRETCHING del segment
-            sox $root/temp/segment1.wav $root/temp/segment2_speed.wav $root/temp/segment3.wav $DIR/$folder_name/$(basename $file)       #Combinar segments
+            sox $root/temp/segment1.wav $root/temp/segment2_speed.wav $root/temp/segment3.wav $DIR/$folder_name/$out_name    #Combinar segments
         fi
     fi  
     
-    echo "time stretching to " $file "; --> speed_factor: " $speed_factor " stretch_start: " $stretch_start "stretch_end: " $stretch_end
+    echo -e "time \t" $file "; --> speed_factor: " $speed_factor " stretch_start: " $stretch_start "stretch_end: " $stretch_end
 
     speed_factor=$speed_factor_aux
     stretch_start=$stretch_start_aux
@@ -172,7 +175,7 @@ function trim_segments(){
     local duration_2=$stretch_end-$stretch_start                                        #Establir durada del segon segment
     sox $file $root/temp/segment2.wav trim $stretch_start $duration_2                    #Retallar segon segment
     local duration_3=$tf-$stretch_end                                                   #Establir durada del tercer segment
-    sox $file $root/temp/segment3.wav trim $end $stretch_end                             #Retallar tercer segment
+    sox $file $root/temp/segment3.wav trim $stretch_end $duration_3                             #Retallar tercer segment
 }
 
 
@@ -187,6 +190,12 @@ function noise_adding(){
     fi 
 
     cd $root/$workingDIR
+
+    if [[ $ratio_dB == "" ]]; then
+        #echo "SNR random"
+        ratio_dB=$(seq -6 1 6| shuf | head -n1) 
+        #echo $ratio_dB
+    fi
 
     NOISE_SAMPLE_AUX=$NOISE_SAMPLE
 
@@ -205,7 +214,7 @@ function noise_adding(){
 
     else 
         #echo "REAL NOISE"
-                cd $root/$workingDIR
+            cd $root/$workingDIR
         if [ -f $root/$NOISE_SAMPLE ]; then
             NOISE_SAMPLE=$NOISE_SAMPLE
         elif [ -d $root/$NOISE_SAMPLE ]; then
@@ -227,11 +236,11 @@ function noise_adding(){
         #change_noise_volume
 
         if [ $(echo "$tf_noise > $tf" |bc -l) == 1 ]; then                                      # si el temps noise és superior a la mostra, no cal allargar-lo
-            echo "CASE 1"
+            #echo "CASE 1"
             sox $root/$NOISE_SAMPLE $root/temp/noise.wav trim 0 $tf                 # retallar soroll a llargada de loriginal
             #sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file)     # mescla soroll retallat i original
         else
-            echo "CASE 2"
+            #echo "CASE 2"
             local aux=`echo "$tf/$tf_noise" | bc`                                       # Part entera
             cp $root/$NOISE_SAMPLE $root/temp/noise_aux.wav              # Copia a la carpeta temporal per tenir audio incial a replicar
             for (( c=1; c<=$aux; c++ )); do  
@@ -250,7 +259,7 @@ function noise_adding(){
         NOISE_SAMPLE="random $NOISE_TYPE noise"  
     fi
 
-    echo "noise adding to " $file "; --> noise sample:" $NOISE_SAMPLE
+    echo -e "noise \t" $file "; --> noise sample:" $NOISE_SAMPLE "; ratio_dB: " $ratio_dB
 
     NOISE_SAMPLE=$NOISE_SAMPLE_AUX
     #compute_SNR        #NO te sentit calcular SNR pq el soroll no se lia ha aplicat el $volume, s'ha aplicat directament a la mescla.
@@ -272,6 +281,9 @@ function noise_generator(){
 
 
 function adjust_gain(){
+        local name="${file%.*}"
+        local out_name=$name"_noise.wav"  
+        #echo "OUTNAME" $out_name
         value_name="RMS     amplitude:"
         
         audio=$file
@@ -308,8 +320,8 @@ function adjust_gain(){
         #echo "AMP FILE RMS VALUE" $amp_file_RMS
 
         # !!!! sox -m $root/temp/noise.wav $file $DIR/$folder_name/$(basename $file) gain -b $output    # INCORRECTE PQ AMPLIFIQUES LA MESCLA
- 
-        sox -m $root/temp/noise.wav $root/temp/amp_file.wav $DIR/$folder_name/$(basename $file)   # mescla
+        
+        sox -m $root/temp/noise.wav $root/temp/amp_file.wav $DIR/$folder_name/$out_name  # mescla
         
         audio=$DIR/$folder_name/$(basename $file) 
         extract_from_STAT
@@ -453,20 +465,22 @@ function FIR_conv(){
     fi 
 
     cd $root/$workingDIR
+    local name="${file%.*}"
+    local out_name=$name"_RIR.wav"  
     
     RIR_file_aux=$RIR_file
 
 
     if [ -f $root/$RIR_file ]; then
-        sox -v 0.5 $file $DIR/$folder_name/$(basename $file) fir $root/$RIR_file
+        sox -v 0.5 $file $DIR/$folder_name/$out_name fir $root/$RIR_file
     elif [ -d $root/$RIR_file ]; then
         cd $root/$RIR_file
         get_random_file 
         cd $root/$workingDIR
-        sox -v 0.9 $file $DIR/$folder_name/$(basename $file) fir $root/$RIR_file/$random_file
+        sox -v 0.9 $file $DIR/$folder_name/$out_name fir $root/$RIR_file/$random_file
         RIR_file=$random_file
     fi
-    echo "RIR filter to  " $file "--> file: " $RIR_file
+    echo -e "RIR " "\t" $file "; --> file: " $RIR_file
     
     RIR_file=$RIR_file_aux
 
@@ -480,13 +494,27 @@ function freq_masking(){
         create_folder $DIR $folder_name
     fi 
     cd $root/$workingDIR
+    local name="${file%.*}"
+    local out_name=$name"_mask.wav"  
+
+    if [[ $f_centre == "" ]]; then
+        ini_param=200    
+        if [[ $width != "" ]]; then
+            ini_param=$width
+        fi
+        f_centre=$(seq $ini_param 100  2000 | shuf | head -n1)
+    fi
+    
+    if [[ $width == "" ]]; then
+        width=$(seq 100 100  500 | shuf | head -n1)
+    fi
 
     local f_ini=`echo " $f_centre-$width" | bc`
     local f_fin=`echo " $f_centre+$width" | bc`
     #echo $f_ini $f_fin
-    sox $file $DIR/$folder_name/$(basename $file) sinc $f_fin-$f_ini
+    sox $file $DIR/$folder_name/$out_name sinc $f_fin-$f_ini -a 180 #at=180dB
 
-    echo "Frequency masking to  " $file "--> f_centre: " $f_centre " width: " $width
+    echo -e "mask" '\t' $file "; --> f_centre: " $f_centre " width: " $width
 
 }
 

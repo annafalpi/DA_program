@@ -140,7 +140,7 @@ function pitch_conf_error(){
         
         if [[ $len_start == 1 ]] && [[ $len_end == 1 ]]; then
             if [ $(echo "$shift_start > $shift_end" |bc -l) == 1 ]; then
-                echo "PITCH SHIFTINGCONFIGURATION ERROR 1 --> shift_start (" $shift_start ") should be lower than shift_end(" $shift_end ")."
+                echo "PITCH SHIFTING CONFIGURATION ERROR 1 --> shift_start (" $shift_start ") should be lower than shift_end(" $shift_end ")."
                 exit
             fi
         elif [[ $len_start == 1 ]] && [[ $len_end == 2 ]]; then
@@ -385,6 +385,15 @@ function noise_conf_error(){
             fi
         fi
 
+        local re='^[0-9]+([.][0-9]+)?$'
+        if [[ $ratio_dB != "" ]]; then
+        if ! [[ $ratio_dB =~ $re ]] ; then
+            echo "FREQUENCY MASKING CONFIGURATION ERROR --> f_centre is not a number"
+            exit
+        fi
+    fi
+
+
     fi
 }
 
@@ -416,16 +425,24 @@ function RIR_conf_error(){
 
 function masking_conf_error(){
     local re='^[0-9]+([.][0-9]+)?$'
-    if ! [[ $f_centre =~ $re ]] ; then
-        echo "FREQUENCY MASKING CONFIGURATION ERROR --> f_centre is not a number"
-        exit
-    elif ! [[ $width =~ $re ]] ; then
-        echo "FREQUENCY MASKING CONFIGURATION ERROR --> width is not a number"
-        exit
-    elif [ $(echo "$width > $f_centre" |bc -l) == 1 ]; then
+    if [[ $f_centre != "" ]]; then
+        if ! [[ $f_centre =~ $re ]] ; then
+            echo "FREQUENCY MASKING CONFIGURATION ERROR --> f_centre is not a number"
+            exit
+        fi
+    fi
+    
+    if [[ $width != "" ]]; then
+        if ! [[ $width =~ $re ]] ; then
+            echo "FREQUENCY MASKING CONFIGURATION ERROR --> width is not a number"
+            exit
+        fi
+    fi
+    if [[ $(echo "$width > $f_centre" |bc -l) == 1 ]]; then
         echo "FREQUENCY MASKING CONFIGURATION ERROR --> width is GREATER than f_centre"
         exit
     fi
+    
 
 }
 

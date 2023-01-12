@@ -15,18 +15,16 @@ usage summary: [INPUT FILE] [METHOD] [optional]
 
 OPTIONS:
 
-    - [INPUT FILE]: --> file.wav or file.mp3 to apply [METHOD]
-                    --> folder to apply [METHOD] for each file.wav or file.mp3
+    - [INPUT]: --> path\file to apply [METHOD].
+                --> path\folder to apply [METHOD] for each file.
 
-    - [METHOD]:     --> pitch  : pitch shifting
-                    --> time   : time stretching
-                    --> RIR   : RIR generation
-                    --> noise  : noise adding
-                    --> masking  : frequency masking
-                    --> chorus : chorus efect
-                    --> delay  : delay efect
-                    --> reverb : reverb efect
+    - [METHOD]: --> pitch, PITCH or Pitch   : pitch shifting
+                --> time, TIME or Time      : time stretching
+                --> RIR, rir or Rir,         : RIR generation
+                --> noise, NOISE or Noise   : noise adding
+                --> masking, MASKING or Masking  : frequency masking
 
+    -[OUT DIR]: --> output dir - DEFAULT: DA_program/DATA_AUGMENTATION - 
 
     - [optional]:   --> pley            : play generated sample
                     --> wave            : display generated sample wave

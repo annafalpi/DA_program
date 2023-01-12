@@ -1,7 +1,0 @@
-../PROVAR/CARPETA/input_files_out/upc_ca_eli_clunits-1.2.wav
-../PROVAR/CARPETA/input_files_out/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100004.wav
-../PROVAR/CARPETA/input_files_out/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100002.wav
-../PROVAR/CARPETA/input_files_out/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100000.wav
-../PROVAR/CARPETA/input_files_out/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100005.wav
-../PROVAR/CARPETA/input_files_out/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100001.wav
-../PROVAR/CARPETA/input_files_out/REDUCTED_upc_ca_ona_raw/upc_ca_ona_100003.wav

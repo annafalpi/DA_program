@@ -154,10 +154,10 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             #echo "FILE: " $file
             #echo "DIR: " $workingDIR
             
-            #ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
+            ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
             #sub_DIR=`echo ${line##*\$ref_DIR}`
 
-            ref_DIR="PROVAR/CARPETA"
+            #ref_DIR="PROVAR/CARPETA"
             sub_DIR=`echo ${line##*\$ref_DIR}`
 
             #echo $sub_DIR

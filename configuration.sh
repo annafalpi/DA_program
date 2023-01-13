@@ -48,7 +48,7 @@ stretch_end=8
         - ""       --> random  value. -- DEFAULT [-6, 6] --
 '   
 NOISE_SAMPLE=""
-ratio_dB=-6
+ratio_dB=""
 
 : ' *********************** RIR FILTER  *********************** 
     RIR_file:

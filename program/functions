@@ -35,9 +35,6 @@ function pitch_shifting(){
     fi 
     
     cd $root/$workingDIR 
-    local name="${file%.*}"
-    local out_name=$name"_pitch.wav"  
-
     local tf=$(soxi -D  $file)
 
     pitch_factor_aux=$pitch_factor
@@ -78,6 +75,8 @@ function pitch_shifting(){
     #echo "PITCH FACTOR IS: " $pitch_factor
     #echo "START IS: "  $shift_start
     #echo "END IS: "  $shift_end
+    local name="${file%.*}"
+    local out_name=$name"_pitch_"$pitch_factor".wav"
 
     if [ $pitch_factor == 0 ]; then
         sox -v 0.99 $file $DIR/$folder_name/$(basename $file) 
@@ -111,8 +110,6 @@ function time_scretching(){
     fi 
 
     cd $root/$workingDIR 
-    local name="${file%.*}"
-    local out_name=$name"_time.wav"  
     local tf=$(soxi -D  $file)
 
     speed_factor_aux=$speed_factor
@@ -149,6 +146,11 @@ function time_scretching(){
     echo "START IS: "  $stretch_start
     echo "END IS: "  $stretch_end
     '
+
+    local name="${file%.*}"
+    #local out_name=$name"_time.wav"  
+    local out_name=$name"_time_"$speed_factor".wav"
+
     if [ $speed_factor == 0 ]; then   
         sox $file $DIR/$folder_name/$(basename $file) 
     else
@@ -191,14 +193,15 @@ function noise_adding(){
 
     cd $root/$workingDIR
 
+    NOISE_SAMPLE_AUX=$NOISE_SAMPLE
+    ratio_dB_aux=$ratio_dB
+
     if [[ $ratio_dB == "" ]]; then
         #echo "SNR random"
         ratio_dB=$(seq -6 1 6| shuf | head -n1) 
         #echo $ratio_dB
     fi
-
-    NOISE_SAMPLE_AUX=$NOISE_SAMPLE
-
+    
     local file_duration=$(soxi -D $file)                                           # Durada del senyal original
     local file_sr=$(soxi -r $file)                                                 # SR del senyal original
     local file_channels=$(soxi -c $file)                                           # Canals del senyal original
@@ -207,7 +210,7 @@ function noise_adding(){
     #echo  $file_sr $file_channels $file_bits
 
     if [ -z $NOISE_SAMPLE ]; then                                        
-        
+        #echo "HERE: Noise sample:" $NOISE_SAMPLE "ratio dB: " $ratio_dB
         noise_generator $file_duration $file_sr $file_channels $file_bits              # Sintesi del soroll
         noise_file=$root/temp/noise.wav
         adjust_gain
@@ -262,6 +265,7 @@ function noise_adding(){
     echo -e "noise \t" $file "; --> noise sample:" $NOISE_SAMPLE "; ratio_dB: " $ratio_dB
 
     NOISE_SAMPLE=$NOISE_SAMPLE_AUX
+    ratio_dB=$ratio_dB_aux
     #compute_SNR        #NO te sentit calcular SNR pq el soroll no se lia ha aplicat el $volume, s'ha aplicat directament a la mescla.
 
 
@@ -281,8 +285,10 @@ function noise_generator(){
 
 
 function adjust_gain(){
+        #echo "HERE"
         local name="${file%.*}"
-        local out_name=$name"_noise.wav"  
+        #local out_name=$name"_noise.wav"
+        local out_name=$name"_noise_"$ratio_dB".wav"  
         #echo "OUTNAME" $out_name
         value_name="RMS     amplitude:"
         
@@ -329,7 +335,7 @@ function adjust_gain(){
 
         #echo "MIX 1 FILE RMS VALUE" $mix_file_RMS
 
-        SNR_lin=`echo " scale=6; $ratio_lin*$mix_file_RMS/$noise_RMS" | bc`
+        #SNR_lin=`echo " scale=6; $ratio_lin*$mix_file_RMS/$noise_RMS" | bc`
         #echo "SNR_lin: " $SNR_lin
 
 
@@ -494,8 +500,8 @@ function freq_masking(){
         create_folder $DIR $folder_name
     fi 
     cd $root/$workingDIR
-    local name="${file%.*}"
-    local out_name=$name"_mask.wav"  
+
+   
 
     if [[ $f_centre == "" ]]; then
         ini_param=200    
@@ -508,6 +514,11 @@ function freq_masking(){
     if [[ $width == "" ]]; then
         width=$(seq 100 100  500 | shuf | head -n1)
     fi
+
+    local name="${file%.*}"
+    local out_name=$name"_mask_"$f_centre$width".wav"  
+
+    
 
     local f_ini=`echo " $f_centre-$width" | bc`
     local f_fin=`echo " $f_centre+$width" | bc`

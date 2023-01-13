@@ -2,7 +2,8 @@
 . ./program/error_control
 . ./program/system_functions.sh
 
-source ./configuration.sh
+source ./configuration_experiment.sh
+#source ./configuration.sh
 
 DIR="$( cd -P "$( dirname -- "$SOURCE"; )" &> /dev/null && pwd 2> /dev/null )"
 root=$DIR
@@ -103,7 +104,6 @@ elif [[ -f $1 ]] && [[ "${n##*.}" != 'txt' ]] ; then
     else
         DA_method_error
     fi
-
     outfile=$DIR/$folder_name/$file
 
 elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
@@ -157,7 +157,7 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
             #sub_DIR=`echo ${line##*\$ref_DIR}`
 
-            ref_DIR="PROVAR/CARPETA"
+            #ref_DIR="PROVAR/CARPETA"
             sub_DIR=`echo ${line##*\$ref_DIR}`
 
             #echo $sub_DIR

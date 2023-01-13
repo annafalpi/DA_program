@@ -21,6 +21,6 @@ for n in mod_data:
     f.write('\n')
 
 f = open('REDUCTED_vox_celeb_1_train_labels.txt', 'w')
-for i in range(10):
+for i in range(40):
     f.write(mod_data[i])
     f.write('\n')

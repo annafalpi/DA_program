@@ -35,7 +35,7 @@ shift_end=end
         - (number number)   --> random end value between a tuple.
         - ""                --> random end value.  
 '
-speed_factor=(0.75 1.2)
+speed_factor=(0.5 1.5)
 stretch_start=ini
 stretch_end=end
 

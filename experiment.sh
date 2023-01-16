@@ -1,6 +1,6 @@
 
 
-list="vox_celeb_1_train_labels.txt"
+list="lists/REDUCTED_vox_celeb_1_train_labels.txt"
 aux_folder="out"
 in_folder="dev"
 out_folder="dev_aug"

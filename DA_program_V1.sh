@@ -149,17 +149,23 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
         aux_folder_name=$folder_name
 
         while read line; do
+            #echo $line
             file=$(basename $line)
             workingDIR="$(dirname -- $line)"
             #echo "FILE: " $file
             #echo "DIR: " $workingDIR
             
-            ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
-            #sub_DIR=`echo ${line##*\$ref_DIR}`
+            #ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev" # l'estructura anterior a això no es replica
 
             #ref_DIR="PROVAR/CARPETA"
+            
+            if ! [[ "$4" =~ ^[0-9]+$ ]]; then 
+                ref_DIR=$4
+            fi
+            if [ -z $4 ]; then
+                ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
+            fi
             sub_DIR=`echo ${line##*\$ref_DIR}`
-
             #echo $sub_DIR
             
             DIR=$DIR/$folder_name
@@ -167,23 +173,34 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
 
             str=$workingDIR
             IFS='/' read -ra path <<< "$sub_DIR"    # treiem les barres
-            len=${#path[@]}
-            #echo "LEN" $len
-            #echo "path"
+
             #for i in ${path[@]} ; do
             #    echo $i
             #done
 
-            #echo "PATH: " ${path[@]}
             unset path[-1]                         # ens carreguem el fitxer de la cadena
             folder_name=${path[-1]}                 # carpeta final
             #echo "FINAL folder:" $folder_name
             unset path[-1]
-            
-            #echo "PATH: " ${path[@]}
-   
-            for i in "${path[@]}"; do
+
+            out_path=("${path[@]}")
+            if [ $2 ==  "pitch" ]; then
+                if [ $4 == 0.9 ];then 
+                    pitch_factor=0.9
+                    out_path[1]=${path[1]}"_0.9"
+                elif [ $4 == 1.1 ];then
+                    pitch_factor=1.1
+                    out_path[1]=${path[1]}"_1.1"
+                fi
+            fi
+
+            #for i in ${out_path[@]}; do
+            #    echo $i
+            #done
+ 
+            for i in "${out_path[@]}"; do
                 if [ ! -d $DIR/$i ] ; then
+                    #echo $i
                     cd $DIR
                     mkdir $i
                 fi
@@ -197,7 +214,7 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             
             if [ $2 == "rand" ];then
                 #echo "RANDOM METHOD"
-                items=( "time" "noise" "RIR" "masking")             #NO PITCH ITEM
+                items=( "time" "noise" "RIR" "masking" "none")             #NO PITCH ITEM
                 # Obtener un valor random del array
                 size=${#items[@]}
                 randomindex=$(($RANDOM % $size))
@@ -226,12 +243,16 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             elif [ $rand_method = "masking" ] || [[ $rand_method = "MASKING" ]] || [[ $rand_method = "Masking" ]] ; then
                 cd $root/$workingDIR
                 freq_masking $file
+            elif [ $rand_method = "none" ]; then
+                cd $root/$workingDIR
+                none_method $file
+           
             else
                 DA_method_error
             fi
-            
             DIR=$auxDIR
             folder_name=$aux_folder_name
+            
         done < $n
 
     fi
@@ -319,7 +340,7 @@ else
     IN_FILE_error
 fi
 
-
+: '
 if [ $4 ]; then   
     if [ $4 =  "wave" ] || [ $4 =  "spectrogram" ]; then
         python3 $root/program/spectrogram.py $outfile $4
@@ -331,3 +352,4 @@ if [ $4 ]; then
     IN_OPTION_error
     fi
 fi
+'

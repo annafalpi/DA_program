@@ -76,7 +76,8 @@ function pitch_shifting(){
     #echo "START IS: "  $shift_start
     #echo "END IS: "  $shift_end
     local name="${file%.*}"
-    local out_name=$name"_pitch_"$pitch_factor".wav"
+    #local out_name=$name"_pitch_"$pitch_factor".wav"               #linia comentada per experiment
+    local out_name=$name".wav"               
 
     if [ $pitch_factor == 0 ]; then
         sox -v 0.99 $file $DIR/$folder_name/$(basename $file) 
@@ -526,6 +527,17 @@ function freq_masking(){
     sox $file $DIR/$folder_name/$out_name sinc $f_fin-$f_ini -a 180 #at=180dB
 
     echo -e "mask" '\t' $file "; --> f_centre: " $f_centre " width: " $width
+
+}
+
+function none_method(){
+
+    local name="${file%.*}"
+    local out_name=$name"_none.wav"
+
+    sox $file $DIR/$folder_name/$out_name               #còpia de l'àudio
+    echo -e "none" '\t' $file
+
 
 }
 

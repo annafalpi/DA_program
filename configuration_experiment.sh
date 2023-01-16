@@ -15,7 +15,7 @@ shift_end
     - (number number)   --> random end value between a tuuple.
     - ""                --> random end value.
 '
-pitch_factor=(0.9 1)
+pitch_factor=0.9
 shift_start=ini
 shift_end=end
 

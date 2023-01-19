@@ -155,16 +155,10 @@ elif [[ -f $1 ]] && [[ "${n##*.}" == "txt" ]] ; then
             #echo "FILE: " $file
             #echo "DIR: " $workingDIR
             
-            #ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev" # l'estructura anterior a això no es replica
+            ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev" # l'estructura anterior a això no es replica
 
-            #ref_DIR="PROVAR/CARPETA"
-            
-            if ! [[ "$4" =~ ^[0-9]+$ ]]; then 
-                ref_DIR=$4
-            fi
-            if [ -z $4 ]; then
-                ref_DIR="veussd/DATABASES/VoxCeleb/VoxCeleb1/dev"
-            fi
+            #ref_DIR="PROVAR/dev"
+
             sub_DIR=`echo ${line##*\$ref_DIR}`
             #echo $sub_DIR
             
